@@ -26,7 +26,7 @@ export default function DealStats({ deals }: DealStatsProps) {
       icon: <CheckCircle className="h-5 w-5" />,
     },
     {
-      label: "Active Deals",
+      label: "Activee Deals",
       value: deals.filter((d) => !["Closed Won", "Closed Lost"].includes(d.dealStage)).length,
       color: "text-orange-600",
       icon: <Clock className="h-5 w-5" />,
