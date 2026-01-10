@@ -6,7 +6,7 @@ import type { Deal } from "@/lib/types";
 
 // Redux imports
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
-import { addDeal as addDealAction, deleteDeal as deleteDealAction } from "@/lib/redux/slices/dealSlice";
+import { deleteDeal as deleteDealAction } from "@/lib/redux/slices/dealSlice";
 
 // Component imports
 import DealStats from "./components/DealStats";

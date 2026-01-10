@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { X, MapPin, User, Plus, AlertCircle, UserCheck } from "lucide-react";
+import { X, MapPin, User, Plus, UserCheck } from "lucide-react";
 import { leadSources, leadStages } from "@/lib/constants";
 import type { SiteVisit, Lead } from "@/lib/types";
 

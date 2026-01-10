@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Settings as SettingsIcon } from "lucide-react";
+// import { Settings as SettingsIcon } from "lucide-react";
 
 import SettingsHeader from "./components/SettingsHeader";
 import SettingsTabs from "./components/SettingsTabs";

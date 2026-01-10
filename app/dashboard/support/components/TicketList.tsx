@@ -1,4 +1,4 @@
-import { Ticket, User, Mail, Phone, Clock, Tag, Eye, User2 } from "lucide-react";
+import { Ticket, User, Mail, Phone, Clock, Tag, Eye } from "lucide-react";
 import type { SupportTicket } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 

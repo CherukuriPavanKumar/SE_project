@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, User, Mail, Phone, Clock, Tag, Send, UserCircle2 } from "lucide-react";
+import { X, User, Mail, Phone, Clock, Tag, Send} from "lucide-react";
 import type { SupportTicket } from "@/lib/types";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { updateTicketStatus, assignTicket, addResponse } from "@/lib/redux/slices/supportSlice";
@@ -18,17 +18,17 @@ export default function TicketDetailsModal({ ticket, onClose }: TicketDetailsMod
   const [responseMessage, setResponseMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      New: "bg-purple-100 text-purple-700",
-      Open: "bg-blue-100 text-blue-700",
-      "In Progress": "bg-orange-100 text-orange-700",
-      Pending: "bg-yellow-100 text-yellow-700",
-      Resolved: "bg-green-100 text-green-700",
-      Closed: "bg-gray-100 text-gray-700",
-    };
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
-  };
+  // const getStatusColor = (status: string) => {
+  //   const colors = {
+  //     New: "bg-purple-100 text-purple-700",
+  //     Open: "bg-blue-100 text-blue-700",
+  //     "In Progress": "bg-orange-100 text-orange-700",
+  //     Pending: "bg-yellow-100 text-yellow-700",
+  //     Resolved: "bg-green-100 text-green-700",
+  //     Closed: "bg-gray-100 text-gray-700",
+  //   };
+  //   return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
+  // };
 
   const getPriorityColor = (priority: string) => {
     const colors = {

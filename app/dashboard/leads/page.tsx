@@ -6,7 +6,7 @@ import type { Lead } from "@/lib/types";
 
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
 import {
-  addLead as addLeadAction,
+  // addLead as addLeadAction,
   updateLead as updateLeadAction,
   deleteLead as deleteLeadAction,
 } from "@/lib/redux/slices/leadSlice";

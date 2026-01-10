@@ -7,7 +7,7 @@ import type { Property } from "@/lib/types";
 // Redux imports
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
 import {
-  addProperty as addPropertyAction,
+  // addProperty as addPropertyAction,
   deleteProperty as deletePropertyAction,
 } from "@/lib/redux/slices/propertySlice";
 

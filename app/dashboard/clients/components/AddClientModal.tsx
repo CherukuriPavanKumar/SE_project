@@ -15,7 +15,7 @@ interface AddClientModalProps {
 
 export default function AddClientModal({ onClose }: AddClientModalProps) {
   const dispatch = useAppDispatch();
-  const clients = useAppSelector((state) => state.clients.items);
+  // const clients = useAppSelector((state) => state.clients.items);
   const agents = useAppSelector((state) => state.agents.items);
   const properties = useAppSelector((state) => state.properties.items);
 
