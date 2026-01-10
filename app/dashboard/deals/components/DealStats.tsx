@@ -1,5 +1,5 @@
 import { TrendingUp, DollarSign, CheckCircle, Clock } from "lucide-react";
-import { type Deal } from "@/lib/mock-data";
+import { type Deal } from "@/lib/types";
 
 interface DealStatsProps {
   deals: Deal[];
