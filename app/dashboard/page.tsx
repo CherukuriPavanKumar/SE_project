@@ -1,13 +1,5 @@
 "use client";
 
-// ❌ OLD: Context imports
-// import { useLeads } from "@/lib/contexts/LeadContext";
-// import { useClients } from "@/lib/contexts/ClientContext";
-// import { useProperties } from "@/lib/contexts/PropertyContext";
-// import { useDeals } from "@/lib/contexts/DealContext";
-// import { useSiteVisits } from "@/lib/contexts/SiteVisitContext";
-// import { useDocuments } from "@/lib/contexts/DocumentContext";
-
 // ✅ NEW: Redux import
 import { useAppSelector } from "@/lib/redux/hooks";
 

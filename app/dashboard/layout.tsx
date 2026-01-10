@@ -1,8 +1,6 @@
 import Sidebar from "@/components/dashboard/sidebar";
 import DashboardHeader from "@/components/dashboard/header";
 
-// ❌ OLD: import { AppProviders } from "@/lib/contexts/AppProviders";
-// We don't need this anymore! Redux Provider is in root layout
 
 export default function DashboardLayout({
   children,
