@@ -1,4 +1,5 @@
-import { Users, Star, TrendingUp, CreditCard } from "lucide-react";
+import { useMemo } from "react";
+import { Users, Star, TrendingUp, Wallet } from "lucide-react";
 import type { Client } from "@/lib/types";
 
 interface ClientStatsProps {
@@ -6,57 +7,62 @@ interface ClientStatsProps {
 }
 
 export default function ClientStats({ clients }: ClientStatsProps) {
-  const totalValue = clients.reduce((sum, client) => {
-    const value = client.totalValue.replace(/[₹,\s]/g, "");
-    const numValue = parseFloat(value);
-    return sum + (isNaN(numValue) ? 0 : numValue);
-  }, 0);
+  
+  // ⚡ OPTIMIZATION: Memoize stats
+  const stats = useMemo(() => {
+    const totalValue = clients.reduce((sum, client) => {
+      const value = parseFloat(client.totalValue?.replace(/[₹,LakhsCr\s]/g, "") || "0");
+      return sum + (isNaN(value) ? 0 : value);
+    }, 0);
 
-  const formatValue = (value: number) => {
-    if (value >= 10000000) {
-      return `₹${(value / 10000000).toFixed(1)} Cr`;
-    } else if (value >= 100000) {
-      return `₹${(value / 100000).toFixed(1)} L`;
-    }
-    return `₹${value}`;
-  };
+    const formatValue = (val: number) => {
+      if (val >= 100) return `₹${(val / 100).toFixed(2)} Cr`; 
+      return `₹${val.toFixed(2)} L`;
+    };
 
-  const stats = [
-    {
-      label: "Total Clients",
-      value: clients.length,
-      color: "text-blue-600",
-      icon: <Users className="h-5 w-5" />,
-    },
-    {
-      label: "VIP Clients",
-      value: clients.filter((c) => c.status === "VIP").length,
-      color: "text-purple-600",
-      icon: <Star className="h-5 w-5" />,
-    },
-    {
-      label: "Active Clients",
-      value: clients.filter((c) => c.status === "Active").length,
-      color: "text-green-600",
-      icon: <TrendingUp className="h-5 w-5" />,
-    },
-    {
-      label: "Total Value",
-      value: formatValue(totalValue),
-      color: "text-orange-600",
-      icon: <CreditCard className="h-5 w-5" />,
-    },
-  ];
+    return [
+      {
+        label: "Total Clients",
+        value: clients.length,
+        color: "text-blue-600",
+        bg: "bg-blue-50",
+        icon: Users,
+      },
+      {
+        label: "VIP Clients",
+        value: clients.filter((c) => c.status === "VIP").length,
+        color: "text-purple-600",
+        bg: "bg-purple-50",
+        icon: Star,
+      },
+      {
+        label: "Active Clients",
+        value: clients.filter((c) => c.status === "Active").length,
+        color: "text-green-600",
+        bg: "bg-green-50",
+        icon: TrendingUp,
+      },
+      {
+        label: "Total Portfolio Value",
+        value: formatValue(totalValue),
+        color: "text-orange-600",
+        bg: "bg-orange-50",
+        icon: Wallet,
+      },
+    ];
+  }, [clients]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat) => (
-        <div key={stat.label} className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">{stat.label}</p>
-            <div className={stat.color}>{stat.icon}</div>
+        <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p className="text-sm font-medium text-gray-500">{stat.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.value}</p>
           </div>
-          <p className={`text-2xl font-bold mt-2 ${stat.color}`}>{stat.value}</p>
+          <div className={`p-3 rounded-lg ${stat.bg}`}>
+            <stat.icon className={`h-6 w-6 ${stat.color}`} />
+          </div>
         </div>
       ))}
     </div>
