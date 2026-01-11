@@ -1,4 +1,4 @@
-import { X, CheckCircle, XCircle } from "lucide-react";
+import { X, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import type { Lead } from "@/lib/types";
 import { leadStages } from "@/lib/constants";
 
@@ -16,72 +16,57 @@ export default function StageChangeModal({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div
-          className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75"
-          onClick={onClose}
-        ></div>
+        <div className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-60 backdrop-blur-sm" onClick={onClose}></div>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Change Lead Stage</h3>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                <X className="h-6 w-6" />
-              </button>
+        <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+          <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Update Stage</h3>
+              <p className="text-sm text-gray-500">For {lead.name}</p>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
-              Update stage for <span className="font-medium text-gray-900">{lead.name}</span>
-            </p>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 bg-white hover:bg-gray-100 p-1.5 rounded-full transition-all">
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           <div className="px-6 py-4">
-            <p className="text-xs text-gray-600 mb-3">
-              Current Stage: <span className="font-semibold">{lead.stage}</span>
-            </p>
-            <div className="space-y-2">
+            <div className="flex items-center justify-between mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
+              <span className="text-xs font-semibold text-blue-800 uppercase">Current Stage</span>
+              <span className="text-sm font-bold text-blue-900">{lead.stage}</span>
+            </div>
+
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
               {leadStages
                 .filter((s) => s !== "All Stages" && s !== lead.stage)
                 .map((stage) => (
                   <button
                     key={stage}
                     onClick={() => onStageChange(lead, stage)}
-                    className={`w-full px-4 py-3 text-left rounded-lg border-2 transition-all hover:shadow-md ${
+                    className={`group w-full px-4 py-3 text-left rounded-lg border transition-all hover:shadow-sm flex items-center justify-between ${
                       stage === "Closed"
-                        ? "border-purple-300 bg-purple-50 hover:bg-purple-100"
+                        ? "border-green-200 bg-green-50/50 hover:bg-green-100 hover:border-green-300"
                         : stage === "Discarded"
-                        ? "border-red-300 bg-red-50 hover:bg-red-100"
-                        : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
+                        ? "border-red-200 bg-red-50/50 hover:bg-red-100 hover:border-red-300"
+                        : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {stage === "Closed" && <CheckCircle className="h-5 w-5 text-purple-600" />}
-                        {stage === "Discarded" && <XCircle className="h-5 w-5 text-red-600" />}
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{stage}</p>
-                          {stage === "Closed" && (
-                            <p className="text-xs text-purple-600">
-                              Will convert to client automatically
-                            </p>
-                          )}
-                          {stage === "Discarded" && (
-                            <p className="text-xs text-red-600">Lead did not convert</p>
-                          )}
-                        </div>
+                    <div className="flex items-center gap-3">
+                      {stage === "Closed" ? <CheckCircle className="h-5 w-5 text-green-600" /> :
+                       stage === "Discarded" ? <XCircle className="h-5 w-5 text-red-600" /> :
+                       <div className="h-5 w-5 rounded-full border-2 border-gray-300 group-hover:border-blue-500"></div>
+                      }
+                      
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{stage}</p>
+                        {stage === "Closed" && <p className="text-[10px] text-green-700 font-medium">✨ Converts to Client</p>}
                       </div>
                     </div>
+                    <ArrowRight className={`h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity ${
+                       stage === "Closed" ? "text-green-600" : stage === "Discarded" ? "text-red-600" : "text-blue-500"
+                    }`} />
                   </button>
                 ))}
             </div>
-          </div>
-
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <button
-              onClick={onClose}
-              className="w-full px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
           </div>
         </div>
       </div>

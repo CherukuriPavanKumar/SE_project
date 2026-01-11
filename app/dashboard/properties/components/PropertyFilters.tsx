@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import { propertyTypes, propertyStatuses } from "@/lib/constants";
 
 interface PropertyFiltersProps {
@@ -23,62 +23,63 @@ export default function PropertyFilters({
   setSelectedAgentRole,
 }: PropertyFiltersProps) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        
+        {/* Search - Wider */}
+        <div className="md:col-span-5 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search properties..."
+            placeholder="Search by Title, Location, or ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder:text-gray-500"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm text-gray-900 placeholder:text-gray-500 transition-all"
           />
         </div>
 
-        {/* Type Filter */}
-        <select
-          value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 bg-white"
-        >
-          {propertyTypes.map((type) => (
-            <option key={type} value={type} className="text-gray-900">
-              {type}
-            </option>
-          ))}
-        </select>
+        {/* Filters */}
+        <div className="md:col-span-7 flex flex-col sm:flex-row gap-3">
+          {/* Type Filter */}
+          <div className="relative w-full">
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="w-full appearance-none px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700 bg-white cursor-pointer hover:border-gray-400 transition-colors"
+            >
+              {propertyTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
 
-        {/* Status Filter */}
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 bg-white"
-        >
-          {propertyStatuses.map((status) => (
-            <option key={status} value={status} className="text-gray-900">
-              {status}
-            </option>
-          ))}
-        </select>
+          {/* Status Filter */}
+          <div className="relative w-full">
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="w-full appearance-none px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700 bg-white cursor-pointer hover:border-gray-400 transition-colors"
+            >
+              {propertyStatuses.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          </div>
 
-        {/* Agent Role Filter */}
-        <select
-          value={selectedAgentRole}
-          onChange={(e) => setSelectedAgentRole(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 bg-white"
-        >
-          <option value="All Agents" className="text-gray-900">
-            All Agents
-          </option>
-          <option value="Employee" className="text-gray-900">
-            Employee
-          </option>
-          <option value="Broker" className="text-gray-900">
-            Broker
-          </option>
-        </select>
+          {/* Agent Role Filter */}
+          <div className="relative w-full">
+            <select
+              value={selectedAgentRole}
+              onChange={(e) => setSelectedAgentRole(e.target.value)}
+              className="w-full appearance-none px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700 bg-white cursor-pointer hover:border-gray-400 transition-colors"
+            >
+              <option value="All Agents">All Listed By</option>
+              <option value="Employee">Employees</option>
+              <option value="Broker">Brokers</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   );

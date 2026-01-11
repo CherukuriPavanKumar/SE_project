@@ -1,49 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, Mail, Lock, ArrowRight, Eye, EyeOff, User, Building } from "lucide-react";
+import { 
+  Building2, Mail, Lock, ArrowRight, Eye, EyeOff, 
+  User, Globe, Phone, Users, ShieldCheck, Loader2 
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function SignupPage() {
   const router = useRouter();
+  
   const [formData, setFormData] = useState({
+    // Business Details
     agencyName: "",
+    website: "",
+    teamSize: "",
+    licenseId: "", // RERA or License Number
+    
+    // Contact Person
     fullName: "",
+    phone: "",
     email: "",
+    
+    // Security
     password: "",
     confirmPassword: "",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
 
-    // Frontend validation
-    if (!formData.agencyName || !formData.fullName || !formData.email || !formData.password) {
-      toast.error("Please fill in all fields");
-      setLoading(false);
+    // Strict Validation
+    const requiredFields = ['agencyName', 'fullName', 'email', 'phone', 'password', 'teamSize'];
+    const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+
+    if (missingFields.length > 0) {
+      toast.error("Please fill in all required fields marked with *");
+      setIsLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
-      setLoading(false);
+      setIsLoading(false);
       return;
     }
 
     if (formData.password.length < 8) {
       toast.error("Password must be at least 8 characters");
-      setLoading(false);
+      setIsLoading(false);
       return;
     }
 
-    // Mock signup - just store in localStorage for now
-    setTimeout(() => {
+    try {
+      // Simulate API Processing
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       const mockUser = {
         id: `user_${Date.now()}`,
         email: formData.email,
@@ -52,194 +71,275 @@ export default function SignupPage() {
         tenantId: `tenant_${formData.agencyName.toLowerCase().replace(/\s+/g, "-")}`,
         role: "admin",
         createdAt: new Date().toISOString(),
+        // Store verification details
+        verification: {
+          website: formData.website,
+          phone: formData.phone,
+          licenseId: formData.licenseId,
+          teamSize: formData.teamSize
+        }
       };
 
       localStorage.setItem("auth-user", JSON.stringify(mockUser));
       localStorage.setItem("auth-token", `mock-token-${mockUser.id}`);
 
-      toast.success("Account created successfully!");
+      toast.success("Account created! Verification pending.");
       router.push("/dashboard");
-      setLoading(false);
-    }, 1500);
+    } catch (error) {
+      console.error("Signup error:", error);
+      toast.error("Something went wrong. Please try again.");
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 py-12">
-      <div className="w-full max-w-md animate-fade-in">
-        {/* Logo */}
+    <div className="min-h-screen flex items-center justify-center p-4 py-8 bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+      
+      {/* Background Elements */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+         <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-blue-50 rounded-full blur-[80px] opacity-70"></div>
+         <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-slate-50 rounded-full blur-[80px] opacity-70"></div>
+      </div>
+
+      <div className="w-full max-w-2xl relative z-10 animate-fade-in">
+        
+        {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-2 mb-2">
-            <Building2 className="h-10 w-10 text-blue-600" />
-            <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              WebbHeads CRM
+          <Link href="/" className="inline-flex items-center gap-2 mb-4 group">
+            <div className="p-2.5 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-200 group-hover:scale-105 transition-transform">
+              <Building2 className="h-6 w-6" />
+            </div>
+            <span className="text-2xl font-bold tracking-tight text-slate-900">
+              WebbHeads
             </span>
           </Link>
-          <p className="text-gray-600 mt-2">Create your agency account</p>
+          <h1 className="text-3xl font-bold text-slate-900">Register your Agency</h1>
+          <p className="text-slate-500 mt-2">Create a business account to start managing your properties.</p>
         </div>
 
         {/* Signup Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Agency Name */}
-            <div>
-              <label htmlFor="agencyName" className="block text-sm font-medium text-gray-700 mb-2">
-                Agency Name *
-              </label>
-              <div className="relative">
-                <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="agencyName"
-                  type="text"
-                  placeholder="Prestige Realty"
-                  value={formData.agencyName}
-                  onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  required
-                />
+        <div className="bg-white border border-slate-200 shadow-2xl shadow-slate-200/50 rounded-2xl p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Section: Business Details */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Business Information</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Agency Name */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Agency Name *</label>
+                  <div className="relative group">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <input
+                      type="text"
+                      placeholder="e.g. Prestige Realty"
+                      value={formData.agencyName}
+                      onChange={(e) => handleInputChange("agencyName", e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Website */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Website</label>
+                  <div className="relative group">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <input
+                      type="url"
+                      placeholder="www.agency.com"
+                      value={formData.website}
+                      onChange={(e) => handleInputChange("website", e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Team Size */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Team Size *</label>
+                  <div className="relative group">
+                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <select
+                      value={formData.teamSize}
+                      onChange={(e) => handleInputChange("teamSize", e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm appearance-none"
+                      required
+                    >
+                      <option value="">Select size</option>
+                      <option value="1-5">1-5 Agents</option>
+                      <option value="6-20">6-20 Agents</option>
+                      <option value="21-50">21-50 Agents</option>
+                      <option value="50+">50+ Agents</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* License / RERA ID */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">License / RERA ID</label>
+                  <div className="relative group">
+                    <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <input
+                      type="text"
+                      placeholder="Optional verification"
+                      value={formData.licenseId}
+                      onChange={(e) => handleInputChange("licenseId", e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Full Name */}
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name *
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="fullName"
-                  type="text"
-                  placeholder="John Doe"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  required
-                />
+            {/* Section: Contact Person */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Contact Person</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Full Name */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Full Name *</label>
+                  <div className="relative group">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <input
+                      type="text"
+                      placeholder="John Doe"
+                      value={formData.fullName}
+                      onChange={(e) => handleInputChange("fullName", e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Phone Number */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Mobile Number *</label>
+                  <div className="relative group">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <input
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Email (Full Width) */}
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-sm font-semibold text-slate-700">Work Email *</label>
+                  <div className="relative group">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <input
+                      type="email"
+                      placeholder="name@agency.com"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address *
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="email"
-                  type="email"
-                  placeholder="john@prestigerealty.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  required
-                />
-              </div>
-            </div>
+            {/* Section: Security */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Password *</label>
+                  <div className="relative group">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="8+ characters"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 p-1"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Min 8 characters"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Re-enter password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Confirm Password *</label>
+                  <div className="relative group">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Repeat password"
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                      className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      required
+                    />
+                    {/* Fixed: Now uses correct state and setter */}
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 p-1"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Terms */}
             <div className="flex items-start">
-              <input
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
-                required
-              />
-              <label className="ml-2 text-sm text-gray-600">
-                I agree to the{" "}
-                <Link href="/terms" className="text-blue-600 hover:text-blue-700 font-medium">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link href="/privacy" className="text-blue-600 hover:text-blue-700 font-medium">
-                  Privacy Policy
-                </Link>
+              <div className="flex items-center h-5">
+                <input
+                  id="terms"
+                  type="checkbox"
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                  required
+                />
+              </div>
+              <label htmlFor="terms" className="ml-2 text-sm text-slate-500">
+                I verify that this is a legitimate business and I agree to the{" "}
+                <Link href="/terms" className="text-blue-600 hover:underline">Terms</Link>.
               </label>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center justify-center space-x-2"
+              disabled={isLoading}
+              className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-white" />
               ) : (
                 <>
-                  <span>Create Account</span>
-                  <ArrowRight className="h-5 w-5" />
+                  Create Business Account <ArrowRight className="h-5 w-5" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">or</span>
-            </div>
-          </div>
-
           {/* Login Link */}
-          <div className="text-center">
-            <p className="text-gray-600">
+          <div className="mt-6 text-center border-t border-slate-100 pt-4">
+            <p className="text-slate-500 text-sm">
               Already have an account?{" "}
-              <Link href="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
+              <Link href="/auth/login" className="font-bold text-blue-600 hover:underline">
                 Sign in
               </Link>
             </p>
