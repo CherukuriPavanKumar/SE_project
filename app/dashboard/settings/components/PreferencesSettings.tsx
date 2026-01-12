@@ -1,117 +1,102 @@
-import { Palette, Globe, DollarSign, Calendar, Clock, Save } from "lucide-react";
+import { Palette, Globe, DollarSign, Calendar, Save } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
-import { selectSettings, updateTheme, updateLanguage, updateCurrency, updateDateFormat, updateTimezone } from "@/lib/redux/slices/settingsSlice";
+import { selectSettings, updateTheme, updateLanguage, updateCurrency, updateDateFormat } from "@/lib/redux/slices/settingsSlice";
 import toast from "react-hot-toast";
+
+// Define the valid theme type
+type ThemeType = "light" | "dark" | "system";
 
 export default function PreferencesSettings() {
   const dispatch = useAppDispatch();
   const settings = useAppSelector(selectSettings);
 
+  const selectClasses = "w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer appearance-none";
+
   const handleSave = () => {
-    toast.success("Preferences saved successfully!");
+    // In a real app, this might trigger an API call
+    toast.success("Preferences Saved");
   };
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Application Preferences</h2>
+    <div className="max-w-2xl animate-fade-in">
+      <div className="mb-8 pb-6 border-b border-gray-100">
+        <h2 className="text-lg font-bold text-gray-900">App Preferences</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Customize your application experience
+          Customize your workspace experience
         </p>
       </div>
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Palette className="h-4 w-4 inline mr-2" />
-            Theme
-          </label>
-          <select
-            value={settings.theme}
-            onChange={(e) => dispatch(updateTheme(e.target.value as "light" | "dark" | "system"))}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          >
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-            <option value="system">System</option>
-          </select>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Theme</label>
+          <div className="relative">
+            <Palette className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <select 
+              value={settings.theme} 
+              // Fixed: Cast to specific ThemeType instead of any
+              onChange={(e) => dispatch(updateTheme(e.target.value as ThemeType))} 
+              className={`${selectClasses} pl-10`}
+            >
+              <option value="light">Light Mode</option>
+              <option value="dark">Dark Mode</option>
+              <option value="system">System Default</option>
+            </select>
+          </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Globe className="h-4 w-4 inline mr-2" />
-            Language
-          </label>
-          <select
-            value={settings.language}
-            onChange={(e) => dispatch(updateLanguage(e.target.value))}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          >
-            <option value="en">English</option>
-            <option value="hi">Hindi</option>
-            <option value="mr">Marathi</option>
-            <option value="ta">Tamil</option>
-          </select>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Language</label>
+          <div className="relative">
+            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <select 
+              value={settings.language} 
+              onChange={(e) => dispatch(updateLanguage(e.target.value))} 
+              className={`${selectClasses} pl-10`}
+            >
+              <option value="en">English (US)</option>
+              <option value="hi">Hindi</option>
+              <option value="es">Spanish</option>
+            </select>
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <DollarSign className="h-4 w-4 inline mr-2" />
-            Currency
-          </label>
-          <select
-            value={settings.currency}
-            onChange={(e) => dispatch(updateCurrency(e.target.value))}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          >
-            <option value="INR">INR (₹)</option>
-            <option value="USD">USD ($)</option>
-            <option value="EUR">EUR (€)</option>
-            <option value="GBP">GBP (£)</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Calendar className="h-4 w-4 inline mr-2" />
-            Date Format
-          </label>
-          <select
-            value={settings.dateFormat}
-            onChange={(e) => dispatch(updateDateFormat(e.target.value))}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          >
-            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Clock className="h-4 w-4 inline mr-2" />
-            Timezone
-          </label>
-          <select
-            value={settings.timezone}
-            onChange={(e) => dispatch(updateTimezone(e.target.value))}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          >
-            <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-            <option value="America/New_York">America/New York (EST)</option>
-            <option value="Europe/London">Europe/London (GMT)</option>
-            <option value="Asia/Dubai">Asia/Dubai (GST)</option>
-          </select>
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Currency</label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <select 
+                value={settings.currency} 
+                onChange={(e) => dispatch(updateCurrency(e.target.value))} 
+                className={`${selectClasses} pl-10`}
+              >
+                <option value="INR">INR (₹)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Date Format</label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <select 
+                value={settings.dateFormat} 
+                onChange={(e) => dispatch(updateDateFormat(e.target.value))} 
+                className={`${selectClasses} pl-10`}
+              >
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-end pt-6">
-        <button
-          onClick={handleSave}
-          className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Save className="h-4 w-4" />
-          Save Preferences
+      <div className="flex justify-end pt-8 mt-8 border-t border-gray-100">
+        <button onClick={handleSave} className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm">
+          <Save className="h-4 w-4" /> Save Changes
         </button>
       </div>
     </div>

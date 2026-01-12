@@ -14,12 +14,12 @@ export default function ReportsPage() {
   const metrics = useAppSelector(selectReportMetrics);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[1600px] mx-auto">
       <ReportHeader />
 
       <KeyMetrics metrics={metrics} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <DealPipelineChart metrics={metrics} />
         <LeadFunnelChart metrics={metrics} />
       </div>

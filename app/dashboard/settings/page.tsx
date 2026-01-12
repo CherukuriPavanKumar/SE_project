@@ -16,29 +16,27 @@ export default function SettingsPage() {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "profile":
-        return <ProfileSettings />;
-      case "company":
-        return <CompanySettings />;
-      case "notifications":
-        return <NotificationSettings />;
-      case "security":
-        return <SecuritySettings />;
-      case "preferences":
-        return <PreferencesSettings />;
-      default:
-        return <ProfileSettings />;
+      case "profile": return <ProfileSettings />;
+      case "company": return <CompanySettings />;
+      case "notifications": return <NotificationSettings />;
+      case "security": return <SecuritySettings />;
+      case "preferences": return <PreferencesSettings />;
+      default: return <ProfileSettings />;
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[1200px] mx-auto">
       <SettingsHeader />
       
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <SettingsTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col md:flex-row min-h-[600px]">
+        {/* Left Sidebar Navigation */}
+        <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-200 bg-gray-50/50">
+          <SettingsTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        </div>
         
-        <div className="p-6">
+        {/* Main Content Area */}
+        <div className="flex-1 p-6 md:p-8">
           {renderTabContent()}
         </div>
       </div>

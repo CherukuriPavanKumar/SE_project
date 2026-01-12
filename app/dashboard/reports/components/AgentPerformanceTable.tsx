@@ -1,4 +1,4 @@
-import { Award } from "lucide-react";
+import { Award, Trophy, Medal } from "lucide-react";
 import type { AgentPerformance } from "@/lib/types";
 
 interface AgentPerformanceTableProps {
@@ -7,85 +7,81 @@ interface AgentPerformanceTableProps {
 
 export default function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
   const formatCurrency = (value: number) => {
-    if (value >= 10000000) {
-      return `₹${(value / 10000000).toFixed(2)} Cr`;
-    } else if (value >= 100000) {
-      return `₹${(value / 100000).toFixed(2)} Lakhs`;
-    }
+    if (value >= 100000) return `₹${(value / 100000).toFixed(2)} L`;
     return `₹${value.toLocaleString()}`;
   };
 
+  const getRankIcon = (index: number) => {
+    if (index === 0) return <Trophy className="h-4 w-4 text-yellow-500" />;
+    if (index === 1) return <Medal className="h-4 w-4 text-gray-400" />;
+    if (index === 2) return <Medal className="h-4 w-4 text-orange-400" />;
+    return <span className="text-gray-400 font-mono text-xs w-4 text-center">{index + 1}</span>;
+  };
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Agent Performance</h3>
-        <Award className="h-5 w-5 text-gray-400" />
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">Agent Performance</h3>
+          <p className="text-sm text-gray-500">Top contributors this month</p>
+        </div>
+        <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600">
+          <Award className="h-5 w-5" />
+        </div>
       </div>
+      
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50/50 border-b border-gray-200 font-semibold text-gray-500">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Agent
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                Leads
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                Deals Closed
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                Revenue
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                Conversion
-              </th>
+              <th className="px-6 py-4 w-16 text-center">Rank</th>
+              <th className="px-6 py-4">Agent Name</th>
+              <th className="px-6 py-4 text-center">Leads</th>
+              <th className="px-6 py-4 text-center">Deals</th>
+              <th className="px-6 py-4 text-right">Revenue</th>
+              <th className="px-6 py-4 text-center">Conversion</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-100">
             {agents.map((agent, index) => (
-              <tr key={agent.name} className="hover:bg-gray-50">
+              <tr key={agent.name} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 text-center">
+                  <div className="flex justify-center items-center h-8 w-8 bg-white border border-gray-100 rounded-full mx-auto shadow-sm">
+                    {getRankIcon(index)}
+                  </div>
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {agent.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
+                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                      {agent.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{agent.name}</p>
-                      {index === 0 && (
-                        <span className="text-xs text-yellow-600 flex items-center gap-1">
-                          <Award className="h-3 w-3" /> Top Performer
-                        </span>
-                      )}
+                      <p className="font-semibold text-gray-900">{agent.name}</p>
+                      {index === 0 && <span className="text-[10px] text-green-600 font-medium">Top Performer</span>}
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <span className="text-sm font-medium text-gray-900">{agent.leads}</span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <span className="text-sm font-bold text-green-600">{agent.deals}</span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <span className="text-sm font-bold text-gray-900">
-                    {formatCurrency(agent.revenue)}
+                  <span className="inline-block px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-md font-medium text-xs">
+                    {agent.leads}
                   </span>
                 </td>
+                <td className="px-6 py-4 text-center font-bold text-gray-900">
+                  {agent.deals}
+                </td>
+                <td className="px-6 py-4 text-right font-mono font-medium text-gray-700">
+                  {formatCurrency(agent.revenue)}
+                </td>
                 <td className="px-6 py-4 text-center">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      agent.conversionRate >= 70
-                        ? "bg-green-100 text-green-700"
-                        : agent.conversionRate >= 50
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {agent.conversionRate}%
-                  </span>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-16 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full ${agent.conversionRate >= 50 ? 'bg-green-500' : 'bg-orange-500'}`} 
+                        style={{ width: `${agent.conversionRate}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold">{agent.conversionRate}%</span>
+                  </div>
                 </td>
               </tr>
             ))}

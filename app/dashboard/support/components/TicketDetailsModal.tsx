@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { X, User, Mail, Phone, Clock, Tag, Send} from "lucide-react";
+import { X, User, Mail, Phone, Tag, Send } from "lucide-react";
 import type { SupportTicket } from "@/lib/types";
-import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import { useAppDispatch } from "@/lib/redux/hooks";
 import { updateTicketStatus, assignTicket, addResponse } from "@/lib/redux/slices/supportSlice";
-import { selectUserProfile } from "@/lib/redux/slices/settingsSlice";
+// import { selectUserProfile } from "@/lib/redux/slices/settingsSlice"; // Assuming this exists or mocked below
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 
@@ -14,35 +14,24 @@ interface TicketDetailsModalProps {
 
 export default function TicketDetailsModal({ ticket, onClose }: TicketDetailsModalProps) {
   const dispatch = useAppDispatch();
-  const currentUser = useAppSelector(selectUserProfile);
+  // Mock user for now if selector isn't ready
+  const currentUser = { name: "Admin User", role: "Admin" }; 
+  
   const [responseMessage, setResponseMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // const getStatusColor = (status: string) => {
-  //   const colors = {
-  //     New: "bg-purple-100 text-purple-700",
-  //     Open: "bg-blue-100 text-blue-700",
-  //     "In Progress": "bg-orange-100 text-orange-700",
-  //     Pending: "bg-yellow-100 text-yellow-700",
-  //     Resolved: "bg-green-100 text-green-700",
-  //     Closed: "bg-gray-100 text-gray-700",
-  //   };
-  //   return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
-  // };
-
   const getPriorityColor = (priority: string) => {
-    const colors = {
-      Low: "bg-gray-100 text-gray-700",
-      Medium: "bg-blue-100 text-blue-700",
-      High: "bg-orange-100 text-orange-700",
-      Urgent: "bg-red-100 text-red-700",
-    };
-    return colors[priority as keyof typeof colors] || "bg-gray-100 text-gray-700";
+    switch (priority) {
+      case "Urgent": return "text-red-600 bg-red-50 ring-red-600/20";
+      case "High": return "text-orange-600 bg-orange-50 ring-orange-600/20";
+      case "Medium": return "text-blue-600 bg-blue-50 ring-blue-600/20";
+      default: return "text-gray-600 bg-gray-50 ring-gray-600/20";
+    }
   };
 
   const handleStatusChange = (newStatus: SupportTicket["status"]) => {
     dispatch(updateTicketStatus({ id: ticket.id, status: newStatus }));
-    toast.success(`Ticket status updated to ${newStatus}`);
+    toast.success(`Status updated to ${newStatus}`);
   };
 
   const handleAssignToMe = () => {
@@ -52,12 +41,11 @@ export default function TicketDetailsModal({ ticket, onClose }: TicketDetailsMod
 
   const handleSendResponse = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!responseMessage.trim()) {
-      toast.error("Please enter a response message");
-      return;
-    }
+    if (!responseMessage.trim()) return;
 
     setIsSubmitting(true);
+    // Simulate API
+    await new Promise(r => setTimeout(r, 600));
 
     const newResponse = {
       id: `RSP${Date.now()}`,
@@ -71,232 +59,178 @@ export default function TicketDetailsModal({ ticket, onClose }: TicketDetailsMod
     dispatch(addResponse(newResponse));
     setResponseMessage("");
     setIsSubmitting(false);
-    toast.success("Response sent successfully");
+    toast.success("Response sent");
   };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75" onClick={onClose}></div>
+        <div className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75 backdrop-blur-sm" onClick={onClose}></div>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-500 to-teal-600">
-            <div className="flex items-center justify-between">
-              <div className="text-white">
-                <h3 className="text-lg font-semibold">{ticket.ticketNumber}</h3>
-                <p className="text-sm opacity-90 mt-1">{ticket.subject}</p>
+        <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full">
+          
+          {/* Header */}
+          <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between bg-white">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="font-mono text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{ticket.ticketNumber}</span>
+                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ring-1 ring-inset ${getPriorityColor(ticket.priority)}`}>{ticket.priority}</span>
+                <span className="text-xs text-gray-400">• {format(new Date(ticket.createdAt), "MMM d, yyyy")}</span>
               </div>
-              <button onClick={onClose} className="text-white hover:bg-white/20 p-2 rounded-full transition-colors">
-                <X className="h-6 w-6" />
-              </button>
+              <h3 className="text-xl font-bold text-gray-900 line-clamp-1">{ticket.subject}</h3>
             </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors">
+              <X className="h-6 w-6" />
+            </button>
           </div>
 
-          <div className="px-6 py-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Customer Details</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <User className="h-4 w-4 text-gray-400" />
-                      <span className="font-medium text-gray-900">{ticket.name}</span>
+          <div className="flex flex-col lg:flex-row h-[70vh]">
+            
+            {/* Left: Conversation (Scrollable) */}
+            <div className="flex-1 flex flex-col border-r border-gray-100 bg-gray-50/30">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                
+                {/* Original Message */}
+                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs">
+                        {ticket.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">{ticket.name}</p>
+                        <p className="text-xs text-gray-500">Customer</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      <a href={`mailto:${ticket.email}`} className="text-blue-600 hover:underline">
-                        {ticket.email}
-                      </a>
+                    <span className="text-xs text-gray-400">{format(new Date(ticket.createdAt), "h:mm a")}</span>
+                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{ticket.message}</p>
+                </div>
+
+                {/* Responses */}
+                {ticket.responses.map((response) => (
+                  <div key={response.id} className={`flex gap-3 ${response.authorType === "Agent" ? "justify-end" : "justify-start"}`}>
+                    {response.authorType !== "Agent" && (
+                      <div className="h-8 w-8 bg-gray-100 rounded-full flex shrink-0 items-center justify-center text-gray-600 font-bold text-xs mt-1">
+                        {response.author.charAt(0)}
+                      </div>
+                    )}
+                    <div className={`max-w-[80%] rounded-xl p-4 shadow-sm ${
+                      response.authorType === "Agent" 
+                        ? "bg-green-600 text-white rounded-tr-none" 
+                        : "bg-white border border-gray-200 rounded-tl-none"
+                    }`}>
+                      <div className={`flex items-center gap-2 mb-1 text-xs ${response.authorType === "Agent" ? "text-green-100" : "text-gray-500"}`}>
+                        <span className="font-bold">{response.author}</span>
+                        <span>• {format(new Date(response.timestamp), "h:mm a")}</span>
+                      </div>
+                      <p className={`text-sm leading-relaxed ${response.authorType === "Agent" ? "text-white" : "text-gray-700"}`}>
+                        {response.message}
+                      </p>
                     </div>
-                    {ticket.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-4 w-4 text-gray-400" />
-                        <a href={`tel:${ticket.phone}`} className="text-blue-600 hover:underline">
-                          {ticket.phone}
-                        </a>
+                    {response.authorType === "Agent" && (
+                      <div className="h-8 w-8 bg-green-100 rounded-full flex shrink-0 items-center justify-center text-green-700 font-bold text-xs mt-1">
+                        {currentUser.name.charAt(0)}
                       </div>
                     )}
                   </div>
-                </div>
+                ))}
+              </div>
 
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Message</h4>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{ticket.message}</p>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-4">Conversation</h4>
-                  <div className="space-y-4">
-                    {ticket.responses.length === 0 ? (
-                      <p className="text-sm text-gray-500 text-center py-4">No responses yet</p>
-                    ) : (
-                      ticket.responses.map((response) => (
-                        <div
-                          key={response.id}
-                          className={`flex gap-3 ${
-                            response.authorType === "Agent" ? "flex-row" : "flex-row-reverse"
-                          }`}
-                        >
-                          <div
-                            className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${
-                              response.authorType === "Agent"
-                                ? "bg-gradient-to-br from-blue-500 to-purple-600"
-                                : "bg-gradient-to-br from-green-500 to-teal-600"
-                            }`}
-                          >
-                            {response.author.split(" ").map((n) => n[0]).join("")}
-                          </div>
-                          <div className={`flex-1 ${response.authorType === "Customer" ? "text-right" : ""}`}>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-medium text-gray-900">{response.author}</span>
-                              <span className="text-xs text-gray-500">
-                                {format(new Date(response.timestamp), "MMM d, yyyy h:mm a")}
-                              </span>
-                            </div>
-                            <div
-                              className={`inline-block p-3 rounded-lg ${
-                                response.authorType === "Agent"
-                                  ? "bg-blue-50 text-gray-900"
-                                  : "bg-green-50 text-gray-900"
-                              }`}
-                            >
-                              <p className="text-sm whitespace-pre-wrap">{response.message}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                <form onSubmit={handleSendResponse} className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Send Response</h4>
-                  <textarea
-                    value={responseMessage}
-                    onChange={(e) => setResponseMessage(e.target.value)}
-                    placeholder="Type your response here..."
-                    rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder:text-gray-500 resize-none"
-                  />
-                  <div className="flex justify-end mt-3">
+              {/* Reply Box */}
+              <div className="p-4 bg-white border-t border-gray-200">
+                <form onSubmit={handleSendResponse}>
+                  <div className="relative">
+                    <textarea
+                      value={responseMessage}
+                      onChange={(e) => setResponseMessage(e.target.value)}
+                      placeholder="Type your reply here..."
+                      rows={3}
+                      className="w-full pl-4 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all text-sm resize-none"
+                    />
                     <button
                       type="submit"
                       disabled={isSubmitting || !responseMessage.trim()}
-                      className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="absolute bottom-3 right-3 p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       <Send className="h-4 w-4" />
-                      {isSubmitting ? "Sending..." : "Send Response"}
                     </button>
                   </div>
                 </form>
               </div>
+            </div>
 
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Ticket Information</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Status</p>
-                      <select
-                        value={ticket.status}
-                        onChange={(e) => handleStatusChange(e.target.value as SupportTicket["status"])}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm bg-white"
-                      >
-                        <option value="New">New</option>
-                        <option value="Open">Open</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
-                      </select>
-                    </div>
+            {/* Right: Sidebar Info */}
+            <div className="w-full lg:w-80 bg-white p-6 space-y-6 overflow-y-auto border-t lg:border-t-0">
+              
+              {/* Status & Actions */}
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status</label>
+                <select
+                  value={ticket.status}
+                  onChange={(e) => handleStatusChange(e.target.value as SupportTicket["status"])}
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                >
+                  <option value="New">New</option>
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
+                </select>
+                
+                {ticket.assignedTo !== currentUser.name && (
+                  <button onClick={handleAssignToMe} className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium rounded-lg border border-gray-200 transition-colors">
+                    Assign to Me
+                  </button>
+                )}
+              </div>
 
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Priority</p>
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getPriorityColor(ticket.priority)}`}>
-                        {ticket.priority}
-                      </span>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Category</p>
-                      <p className="text-sm font-medium text-gray-900">{ticket.category}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Source</p>
-                      <p className="text-sm font-medium text-gray-900">{ticket.source}</p>
+              <div className="border-t border-gray-100 pt-6 space-y-4">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Details</h4>
+                
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <span className="text-gray-500 block text-xs mb-0.5">Customer</span>
+                    <div className="font-medium text-gray-900 flex items-center gap-2">
+                      <User className="h-3.5 w-3.5 text-gray-400" /> {ticket.name}
                     </div>
                   </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Assignment</h4>
-                  {ticket.assignedTo ? (
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                        {ticket.assignedTo.split(" ").map((n) => n[0]).join("")}
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">{ticket.assignedTo}</span>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500 mb-3">Not assigned</p>
-                  )}
-                  {ticket.assignedTo !== currentUser.name && (
-                    <button
-                      onClick={handleAssignToMe}
-                      className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-                    >
-                      Assign to Me
-                    </button>
-                  )}
-                </div>
-
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Tags</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {ticket.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full"
-                      >
-                        <Tag className="h-3 w-3" />
-                        {tag}
-                      </span>
-                    ))}
+                  <div>
+                    <span className="text-gray-500 block text-xs mb-0.5">Email</span>
+                    <a href={`mailto:${ticket.email}`} className="font-medium text-blue-600 hover:underline flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 text-gray-400" /> {ticket.email}
+                    </a>
                   </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Timeline</h4>
-                  <div className="space-y-2 text-xs text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-3 w-3" />
-                      <span>Created: {format(new Date(ticket.createdAt), "MMM d, yyyy h:mm a")}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-3 w-3" />
-                      <span>Updated: {format(new Date(ticket.updatedAt), "MMM d, yyyy h:mm a")}</span>
-                    </div>
-                    {ticket.resolvedAt && (
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-3 w-3" />
-                        <span>Resolved: {format(new Date(ticket.resolvedAt), "MMM d, yyyy h:mm a")}</span>
+                  {ticket.phone && (
+                    <div>
+                      <span className="text-gray-500 block text-xs mb-0.5">Phone</span>
+                      <div className="font-medium text-gray-900 flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-gray-400" /> {ticket.phone}
                       </div>
-                    )}
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-gray-500 block text-xs mb-0.5">Category</span>
+                    <div className="font-medium text-gray-900 flex items-center gap-2">
+                      <Tag className="h-3.5 w-3.5 text-gray-400" /> {ticket.category}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end">
-            <button
-              onClick={onClose}
-              className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Close
-            </button>
+              <div className="border-t border-gray-100 pt-6 space-y-4">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tags</h4>
+                <div className="flex flex-wrap gap-2">
+                  {ticket.tags.map((tag) => (
+                    <span key={tag} className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-md border border-gray-200">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
