@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-// import { Settings as SettingsIcon } from "lucide-react";
-
 import SettingsHeader from "./components/SettingsHeader";
 import SettingsTabs from "./components/SettingsTabs";
 import ProfileSettings from "./components/ProfileSettings";
@@ -26,18 +24,22 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-[1200px] mx-auto">
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
       <SettingsHeader />
       
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col md:flex-row min-h-[600px]">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Sidebar Navigation */}
-        <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-200 bg-gray-50/50">
-          <SettingsTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className="w-full lg:w-72 flex-shrink-0">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm sticky top-6 overflow-hidden">
+            <SettingsTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          </div>
         </div>
         
         {/* Main Content Area */}
-        <div className="flex-1 p-6 md:p-8">
-          {renderTabContent()}
+        <div className="flex-1">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm min-h-[600px]">
+            {renderTabContent()}
+          </div>
         </div>
       </div>
     </div>

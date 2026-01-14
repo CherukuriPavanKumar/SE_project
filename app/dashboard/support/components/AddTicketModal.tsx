@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { X, User, Loader2, HelpCircle } from "lucide-react";
+import { X, User, Loader2, HelpCircle, Mail, Phone, Tag, FileText, AlertCircle } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { addTicket } from "@/lib/redux/slices/supportSlice";
 import { selectAllAgents } from "@/lib/redux/slices/agentSlice";
@@ -38,7 +38,6 @@ export default function AddTicketModal({ onClose }: AddTicketModalProps) {
     }
 
     setIsLoading(true);
-    // Simulate API
     await new Promise(r => setTimeout(r, 800));
 
     const ticketNumber = `TKT-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
@@ -68,9 +67,9 @@ export default function AddTicketModal({ onClose }: AddTicketModalProps) {
     setIsLoading(false);
   };
 
-  // Shared classes for high visibility inputs
-  const inputClasses = "w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 placeholder:text-gray-400";
-  const selectClasses = "w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 appearance-none cursor-pointer";
+  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all shadow-sm";
+  const selectClass = "w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all shadow-sm appearance-none cursor-pointer";
+  const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-green-600 transition-colors";
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -99,48 +98,60 @@ export default function AddTicketModal({ onClose }: AddTicketModalProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Name *</label>
-                  <input 
-                    type="text" 
-                    required 
-                    value={formData.name} 
-                    onChange={e => setFormData({...formData, name: e.target.value})} 
-                    className={inputClasses}
-                    placeholder="Customer Name" 
-                  />
+                  <div className="relative group">
+                    <User className={iconClass} />
+                    <input 
+                      type="text" 
+                      required 
+                      value={formData.name} 
+                      onChange={e => setFormData({...formData, name: e.target.value})} 
+                      className={inputClass}
+                      placeholder="Customer Name" 
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Email *</label>
-                  <input 
-                    type="email" 
-                    required 
-                    value={formData.email} 
-                    onChange={e => setFormData({...formData, email: e.target.value})} 
-                    className={inputClasses}
-                    placeholder="customer@example.com" 
-                  />
+                  <div className="relative group">
+                    <Mail className={iconClass} />
+                    <input 
+                      type="email" 
+                      required 
+                      value={formData.email} 
+                      onChange={e => setFormData({...formData, email: e.target.value})} 
+                      className={inputClass}
+                      placeholder="customer@example.com" 
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Phone</label>
-                  <input 
-                    type="tel" 
-                    value={formData.phone} 
-                    onChange={e => setFormData({...formData, phone: e.target.value})} 
-                    className={inputClasses}
-                    placeholder="+91..." 
-                  />
+                  <div className="relative group">
+                    <Phone className={iconClass} />
+                    <input 
+                      type="tel" 
+                      value={formData.phone} 
+                      onChange={e => setFormData({...formData, phone: e.target.value})} 
+                      className={inputClass}
+                      placeholder="+91..." 
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Source</label>
-                  <select 
-                    value={formData.source} 
-                    onChange={e => setFormData({...formData, source: e.target.value as SupportTicket["source"]})} 
-                    className={selectClasses}
-                  >
-                    <option value="Dashboard">Internal Dashboard</option>
-                    <option value="Phone">Phone Call</option>
-                    <option value="Email">Email</option>
-                    <option value="Chat">Live Chat</option>
-                  </select>
+                  <div className="relative group">
+                    <Tag className={iconClass} />
+                    <select 
+                      value={formData.source} 
+                      onChange={e => setFormData({...formData, source: e.target.value as SupportTicket["source"]})} 
+                      className={selectClass}
+                    >
+                      <option value="Dashboard">Internal Dashboard</option>
+                      <option value="Phone">Phone Call</option>
+                      <option value="Email">Email</option>
+                      <option value="Chat">Live Chat</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -154,69 +165,87 @@ export default function AddTicketModal({ onClose }: AddTicketModalProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Category *</label>
-                  <select 
-                    value={formData.category} 
-                    onChange={e => setFormData({...formData, category: e.target.value as SupportTicket["category"]})} 
-                    className={selectClasses}
-                  >
-                    {ticketCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
+                  <div className="relative group">
+                    <Tag className={iconClass} />
+                    <select 
+                      value={formData.category} 
+                      onChange={e => setFormData({...formData, category: e.target.value as SupportTicket["category"]})} 
+                      className={selectClass}
+                    >
+                      {ticketCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Priority *</label>
-                  <select 
-                    value={formData.priority} 
-                    onChange={e => setFormData({...formData, priority: e.target.value as SupportTicket["priority"]})} 
-                    className={selectClasses}
-                  >
-                    {ticketPriorities.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
+                  <div className="relative group">
+                    <AlertCircle className={iconClass} />
+                    <select 
+                      value={formData.priority} 
+                      onChange={e => setFormData({...formData, priority: e.target.value as SupportTicket["priority"]})} 
+                      className={selectClass}
+                    >
+                      {ticketPriorities.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Assign To</label>
-                  <select 
-                    value={formData.assignedTo} 
-                    onChange={e => setFormData({...formData, assignedTo: e.target.value})} 
-                    className={selectClasses}
-                  >
-                    <option value="">Unassigned</option>
-                    {activeAgents.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                  </select>
+                  <div className="relative group">
+                    <User className={iconClass} />
+                    <select 
+                      value={formData.assignedTo} 
+                      onChange={e => setFormData({...formData, assignedTo: e.target.value})} 
+                      className={selectClass}
+                    >
+                      <option value="">Unassigned</option>
+                      {activeAgents.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Tags</label>
-                  <input 
-                    type="text" 
-                    value={formData.tags} 
-                    onChange={e => setFormData({...formData, tags: e.target.value})} 
-                    className={inputClasses}
-                    placeholder="comma, separated, tags" 
-                  />
+                  <div className="relative group">
+                    <Tag className={iconClass} />
+                    <input 
+                      type="text" 
+                      value={formData.tags} 
+                      onChange={e => setFormData({...formData, tags: e.target.value})} 
+                      className={inputClass}
+                      placeholder="comma, separated, tags" 
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-gray-700">Subject *</label>
-                <input 
-                  type="text" 
-                  required 
-                  value={formData.subject} 
-                  onChange={e => setFormData({...formData, subject: e.target.value})} 
-                  className={inputClasses}
-                  placeholder="Brief summary of the issue" 
-                />
+                <div className="relative group">
+                  <FileText className={iconClass} />
+                  <input 
+                    type="text" 
+                    required 
+                    value={formData.subject} 
+                    onChange={e => setFormData({...formData, subject: e.target.value})} 
+                    className={inputClass}
+                    placeholder="Brief summary of the issue" 
+                  />
+                </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-gray-700">Description *</label>
-                <textarea 
-                  required 
-                  rows={4} 
-                  value={formData.message} 
-                  onChange={e => setFormData({...formData, message: e.target.value})} 
-                  className={`${inputClasses} resize-none`}
-                  placeholder="Detailed explanation..."
-                ></textarea>
+                <div className="relative group">
+                  <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400 group-focus-within:text-green-600 transition-colors" />
+                  <textarea 
+                    required 
+                    rows={4} 
+                    value={formData.message} 
+                    onChange={e => setFormData({...formData, message: e.target.value})} 
+                    className={`${inputClass} resize-none`}
+                    placeholder="Detailed explanation..."
+                  ></textarea>
+                </div>
               </div>
             </div>
 

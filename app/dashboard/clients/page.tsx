@@ -27,7 +27,7 @@ export default function ClientsPage() {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
-  const [selectedAgentRole, setSelectedAgentRole] = useState("All Roles"); // Consistent naming
+  const [selectedAgentRole, setSelectedAgentRole] = useState("All Roles");
   
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
@@ -112,7 +112,7 @@ export default function ClientsPage() {
 
           <button
             onClick={handleResetFilters}
-            className="flex items-center gap-2 px-3 py-2.5 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
+            className="flex items-center gap-2 px-3 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
           >
             <RefreshCcw className="h-4 w-4" />
             Reset

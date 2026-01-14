@@ -4,16 +4,16 @@ import { useState, useMemo } from "react";
 import { Plus, RefreshCcw } from "lucide-react";
 import type { Agent } from "@/lib/types";
 
-// Redux imports
+// Redux
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
 import { deleteAgent as deleteAgentAction } from "@/lib/redux/slices/agentSlice";
 
-// Component imports
+// Components
 import AgentStats from "./components/AgentStats";
 import AgentFilters from "./components/AgentFilters";
 import AgentListView from "./components/AgentListView";
-import AgentDetailsModal from "./components/AgentDetailsModal";
 import AddAgentModal from "./components/AddAgentModal";
+import AgentDetailsModal from "./components/AgentDetailsModal";
 
 import toast from "react-hot-toast";
 
@@ -21,12 +21,12 @@ export default function AgentsPage() {
   const agents = useAppSelector((state) => state.agents.items);
   const dispatch = useAppDispatch();
 
-  // Filters State
+  // State
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState("All Roles");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
   
-  // Modals State
+  // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
@@ -38,8 +38,7 @@ export default function AgentsPage() {
       const matchesSearch =
         agent.name.toLowerCase().includes(query) ||
         agent.email.toLowerCase().includes(query) ||
-        agent.phone.includes(query) ||
-        agent.id.toLowerCase().includes(query);
+        agent.phone.includes(query);
 
       const matchesRole = selectedRole === "All Roles" || agent.role === selectedRole;
       const matchesStatus = selectedStatus === "All Status" || agent.status === selectedStatus;
@@ -74,12 +73,14 @@ export default function AgentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Agents & Brokers</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage your team performance and assignments.</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Manage your team performance and assignments.
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={handleResetFilters}
-            className="flex items-center gap-2 px-3 py-2.5 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
+            className="flex items-center gap-2 px-3 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
           >
             <RefreshCcw className="h-4 w-4" />
             Reset
@@ -108,10 +109,10 @@ export default function AgentsPage() {
       />
 
       {/* List View */}
-      <AgentListView
-        agents={filteredAgents}
+      <AgentListView 
+        agents={filteredAgents} 
         onViewDetails={handleViewDetails}
-        onDelete={handleDeleteAgent}
+        onDelete={handleDeleteAgent} 
       />
 
       {/* Modals */}

@@ -14,7 +14,7 @@ export default function ReportsPage() {
   const metrics = useAppSelector(selectReportMetrics);
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto">
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
       <ReportHeader />
 
       <KeyMetrics metrics={metrics} />
@@ -24,9 +24,14 @@ export default function ReportsPage() {
         <LeadFunnelChart metrics={metrics} />
       </div>
 
-      <AgentPerformanceTable agents={metrics.agentPerformance} />
-
-      <AdditionalMetrics metrics={metrics} />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <AgentPerformanceTable agents={metrics.agentPerformance} />
+        </div>
+        <div className="xl:col-span-1">
+          <AdditionalMetrics metrics={metrics} />
+        </div>
+      </div>
     </div>
   );
 }

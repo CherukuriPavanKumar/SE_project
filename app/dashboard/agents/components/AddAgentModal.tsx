@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, User, Mail, Phone, Briefcase, Loader2, MapPin } from "lucide-react";
+import { X, User, Mail, Phone, Briefcase, Loader2, MapPin, Award, CheckCircle } from "lucide-react";
 import type { Agent } from "@/lib/types";
 import { agentDepartments, agentSpecializations } from "@/lib/constants";
 
@@ -69,6 +69,10 @@ export default function AddAgentModal({ onClose }: AddAgentModalProps) {
     toast.success("Agent added successfully!");
   };
 
+  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm";
+  const selectClass = "w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm appearance-none cursor-pointer";
+  const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors";
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
@@ -97,13 +101,13 @@ export default function AddAgentModal({ onClose }: AddAgentModalProps) {
                 <div className="md:col-span-2 space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Full Name *</label>
                   <div className="relative group">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                    <User className={iconClass} />
                     <input 
                       type="text" 
                       required 
                       value={formData.name} 
                       onChange={e => setFormData({...formData, name: e.target.value})} 
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" 
+                      className={inputClass}
                       placeholder="John Doe" 
                     />
                   </div>
@@ -111,13 +115,13 @@ export default function AddAgentModal({ onClose }: AddAgentModalProps) {
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Email *</label>
                   <div className="relative group">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                    <Mail className={iconClass} />
                     <input 
                       type="email" 
                       required 
                       value={formData.email} 
                       onChange={e => setFormData({...formData, email: e.target.value})} 
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" 
+                      className={inputClass}
                       placeholder="john@example.com" 
                     />
                   </div>
@@ -125,13 +129,13 @@ export default function AddAgentModal({ onClose }: AddAgentModalProps) {
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Phone *</label>
                   <div className="relative group">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                    <Phone className={iconClass} />
                     <input 
                       type="tel" 
                       required 
                       value={formData.phone} 
                       onChange={e => setFormData({...formData, phone: e.target.value})} 
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" 
+                      className={inputClass}
                       placeholder="+91 XXXXX XXXXX" 
                     />
                   </div>
@@ -147,58 +151,73 @@ export default function AddAgentModal({ onClose }: AddAgentModalProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Role</label>
-                  <select 
-                    value={formData.role} 
-                    onChange={e => setFormData({...formData, role: e.target.value as AgentRole})} 
-                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer appearance-none"
-                  >
-                    <option value="Employee">Employee</option>
-                    <option value="Broker">Broker</option>
-                  </select>
+                  <div className="relative group">
+                    <User className={iconClass} />
+                    <select 
+                      value={formData.role} 
+                      onChange={e => setFormData({...formData, role: e.target.value as AgentRole})} 
+                      className={selectClass}
+                    >
+                      <option value="Employee">Employee</option>
+                      <option value="Broker">Broker</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Department</label>
-                  <select 
-                    value={formData.department} 
-                    onChange={e => setFormData({...formData, department: e.target.value})} 
-                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer appearance-none"
-                  >
-                    {agentDepartments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
-                  </select>
+                  <div className="relative group">
+                    <Briefcase className={iconClass} />
+                    <select 
+                      value={formData.department} 
+                      onChange={e => setFormData({...formData, department: e.target.value})} 
+                      className={selectClass}
+                    >
+                      {agentDepartments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Specialization</label>
-                  <select 
-                    value={formData.specialization} 
-                    onChange={e => setFormData({...formData, specialization: e.target.value})} 
-                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer appearance-none"
-                  >
-                    {agentSpecializations.map(spec => <option key={spec} value={spec}>{spec}</option>)}
-                  </select>
+                  <div className="relative group">
+                    <Award className={iconClass} />
+                    <select 
+                      value={formData.specialization} 
+                      onChange={e => setFormData({...formData, specialization: e.target.value})} 
+                      className={selectClass}
+                    >
+                      {agentSpecializations.map(spec => <option key={spec} value={spec}>{spec}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Status</label>
-                  <select 
-                    value={formData.status} 
-                    onChange={e => setFormData({...formData, status: e.target.value as AgentStatus})} 
-                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer appearance-none"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
+                  <div className="relative group">
+                    <CheckCircle className={iconClass} />
+                    <select 
+                      value={formData.status} 
+                      onChange={e => setFormData({...formData, status: e.target.value as AgentStatus})} 
+                      className={selectClass}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
               {formData.role === "Broker" && (
                 <div className="space-y-1.5 animate-fade-in">
                   <label className="text-sm font-semibold text-gray-700">Broker License Number</label>
-                  <input 
-                    type="text" 
-                    value={formData.licenseNumber} 
-                    onChange={e => setFormData({...formData, licenseNumber: e.target.value})} 
-                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 transition-all shadow-sm" 
-                    placeholder="BRK-2024-XXXX" 
-                  />
+                  <div className="relative group">
+                    <Award className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-yellow-600 transition-colors" />
+                    <input 
+                      type="text" 
+                      value={formData.licenseNumber} 
+                      onChange={e => setFormData({...formData, licenseNumber: e.target.value})} 
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 transition-all shadow-sm" 
+                      placeholder="BRK-2024-XXXX" 
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -212,7 +231,7 @@ export default function AddAgentModal({ onClose }: AddAgentModalProps) {
                 rows={2} 
                 value={formData.address} 
                 onChange={e => setFormData({...formData, address: e.target.value})} 
-                className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" 
+                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" 
                 placeholder="Enter full address..."
               ></textarea>
             </div>

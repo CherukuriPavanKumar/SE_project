@@ -27,7 +27,7 @@ export default function ClientListView({
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
-          <thead className="bg-gray-50/50 border-b border-gray-200 font-semibold text-gray-500">
+          <thead className="bg-gray-50/50 border-b border-gray-200 font-semibold text-gray-500 uppercase text-xs tracking-wider">
             <tr>
               <th className="px-6 py-4">Client Details</th>
               <th className="px-6 py-4">Contact Info</th>
@@ -37,11 +37,14 @@ export default function ClientListView({
               <th className="px-6 py-4 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 bg-white">
             {clients.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-6 py-16 text-center text-gray-500">
-                  No clients found.
+                  <div className="flex flex-col items-center justify-center">
+                    <p className="text-base font-medium text-gray-900 mb-1">No clients found</p>
+                    <p className="text-sm">Try adjusting filters or add a new client.</p>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -53,42 +56,42 @@ export default function ClientListView({
                         {client.name.charAt(0)}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">{client.name}</div>
-                        <div className="text-xs text-gray-500">{client.company || "Individual"}</div>
+                        <div className="font-semibold text-gray-900">{client.name}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{client.company || "Individual"}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1.5 text-gray-700">
-                        <Phone className="h-3 w-3 text-gray-400" /> {client.phone}
+                      <div className="flex items-center gap-1.5 text-gray-700 font-medium">
+                        <Phone className="h-3.5 w-3.5 text-gray-400" /> {client.phone}
                       </div>
                       <div className="flex items-center gap-1.5 text-gray-500 text-xs">
-                        <Mail className="h-3 w-3 text-gray-400" /> {client.email}
+                        <Mail className="h-3.5 w-3.5 text-gray-400" /> <span className="truncate max-w-[150px]">{client.email}</span>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-gray-900">{client.totalValue}</div>
-                    <div className="text-xs text-gray-500">{client.totalPurchases} Properties</div>
+                    <div className="font-bold text-gray-900">{client.totalValue}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{client.totalPurchases} Properties</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(client.status)}`}>
+                    <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${getStatusBadge(client.status)}`}>
                       {client.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-gray-600">
+                  <td className="px-6 py-4 text-gray-600 font-medium text-sm">
                     {client.preferredAgent}
                   </td>
                   <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-center gap-2">
-                      <button onClick={() => onViewDetails(client)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View">
+                      <button onClick={() => onViewDetails(client)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100" title="View">
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button onClick={() => toast("Edit coming soon")} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded transition-colors" title="Edit">
+                      <button onClick={() => toast("Edit coming soon")} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors border border-transparent hover:border-orange-100" title="Edit">
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button onClick={() => onDelete(client.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                      <button onClick={() => onDelete(client.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100" title="Delete">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
