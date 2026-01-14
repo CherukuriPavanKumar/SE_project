@@ -13,18 +13,13 @@ export default function SignupPage() {
   const router = useRouter();
   
   const [formData, setFormData] = useState({
-    // Business Details
     agencyName: "",
     website: "",
     teamSize: "",
-    licenseId: "", // RERA or License Number
-    
-    // Contact Person
+    licenseId: "",
     fullName: "",
     phone: "",
     email: "",
-    
-    // Security
     password: "",
     confirmPassword: "",
   });
@@ -37,7 +32,6 @@ export default function SignupPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Strict Validation
     const requiredFields = ['agencyName', 'fullName', 'email', 'phone', 'password', 'teamSize'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
 
@@ -60,7 +54,6 @@ export default function SignupPage() {
     }
 
     try {
-      // Simulate API Processing
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const mockUser = {
@@ -71,7 +64,6 @@ export default function SignupPage() {
         tenantId: `tenant_${formData.agencyName.toLowerCase().replace(/\s+/g, "-")}`,
         role: "admin",
         createdAt: new Date().toISOString(),
-        // Store verification details
         verification: {
           website: formData.website,
           phone: formData.phone,
@@ -99,8 +91,8 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 py-8 bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       
-      {/* Background Elements */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+      {/* Background Elements - Hidden on mobile */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 hidden md:block">
          <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-blue-50 rounded-full blur-[80px] opacity-70"></div>
          <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-slate-50 rounded-full blur-[80px] opacity-70"></div>
       </div>
@@ -108,7 +100,7 @@ export default function SignupPage() {
       <div className="w-full max-w-2xl relative z-10 animate-fade-in">
         
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 md:mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4 group">
             <div className="p-2.5 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-200 group-hover:scale-105 transition-transform">
               <Building2 className="h-6 w-6" />
@@ -117,12 +109,12 @@ export default function SignupPage() {
               WebbHeads
             </span>
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900">Register your Agency</h1>
-          <p className="text-slate-500 mt-2">Create a business account to start managing your properties.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Register Agency</h1>
+          <p className="text-slate-500 mt-2 text-sm md:text-base">Create a business account to get started.</p>
         </div>
 
         {/* Signup Card */}
-        <div className="bg-white border border-slate-200 shadow-2xl shadow-slate-200/50 rounded-2xl p-8">
+        <div className="bg-white border border-slate-200 shadow-xl shadow-slate-200/50 rounded-2xl p-6 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             
             {/* Section: Business Details */}
@@ -140,7 +132,7 @@ export default function SignupPage() {
                       placeholder="e.g. Prestige Realty"
                       value={formData.agencyName}
                       onChange={(e) => handleInputChange("agencyName", e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      className="w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm md:text-base"
                       required
                     />
                   </div>
@@ -156,7 +148,7 @@ export default function SignupPage() {
                       placeholder="www.agency.com"
                       value={formData.website}
                       onChange={(e) => handleInputChange("website", e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      className="w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm md:text-base"
                     />
                   </div>
                 </div>
@@ -169,7 +161,7 @@ export default function SignupPage() {
                     <select
                       value={formData.teamSize}
                       onChange={(e) => handleInputChange("teamSize", e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm appearance-none"
+                      className="w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm md:text-base appearance-none"
                       required
                     >
                       <option value="">Select size</option>
@@ -191,7 +183,7 @@ export default function SignupPage() {
                       placeholder="Optional verification"
                       value={formData.licenseId}
                       onChange={(e) => handleInputChange("licenseId", e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      className="w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm md:text-base"
                     />
                   </div>
                 </div>
@@ -213,7 +205,7 @@ export default function SignupPage() {
                       placeholder="John Doe"
                       value={formData.fullName}
                       onChange={(e) => handleInputChange("fullName", e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      className="w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm md:text-base"
                       required
                     />
                   </div>
@@ -229,7 +221,7 @@ export default function SignupPage() {
                       placeholder="+91 98765 43210"
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      className="w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm md:text-base"
                       required
                     />
                   </div>
@@ -245,7 +237,7 @@ export default function SignupPage() {
                       placeholder="name@agency.com"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      className="w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm md:text-base"
                       required
                     />
                   </div>
@@ -255,6 +247,7 @@ export default function SignupPage() {
 
             {/* Section: Security */}
             <div className="space-y-4">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Security</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-slate-700">Password *</label>
@@ -265,15 +258,15 @@ export default function SignupPage() {
                       placeholder="8+ characters"
                       value={formData.password}
                       onChange={(e) => handleInputChange("password", e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm md:text-base"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 p-1"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 p-2"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>
@@ -287,16 +280,15 @@ export default function SignupPage() {
                       placeholder="Repeat password"
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm"
+                      className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-sm md:text-base"
                       required
                     />
-                    {/* Fixed: Now uses correct state and setter */}
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 p-1"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 p-2"
                     >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>
@@ -304,7 +296,7 @@ export default function SignupPage() {
             </div>
 
             {/* Terms */}
-            <div className="flex items-start">
+            <div className="flex items-start pt-2">
               <div className="flex items-center h-5">
                 <input
                   id="terms"
@@ -313,9 +305,9 @@ export default function SignupPage() {
                   required
                 />
               </div>
-              <label htmlFor="terms" className="ml-2 text-sm text-slate-500">
+              <label htmlFor="terms" className="ml-2 text-xs md:text-sm text-slate-500">
                 I verify that this is a legitimate business and I agree to the{" "}
-                <Link href="/terms" className="text-blue-600 hover:underline">Terms</Link>.
+                <Link href="/terms" className="text-blue-600 hover:underline font-medium">Terms of Service</Link>.
               </label>
             </div>
 
@@ -323,7 +315,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base md:text-lg"
             >
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin text-white" />
@@ -336,8 +328,8 @@ export default function SignupPage() {
           </form>
 
           {/* Login Link */}
-          <div className="mt-6 text-center border-t border-slate-100 pt-4">
-            <p className="text-slate-500 text-sm">
+          <div className="mt-6 md:mt-8 text-center border-t border-slate-100 pt-6">
+            <p className="text-slate-500 text-sm md:text-base">
               Already have an account?{" "}
               <Link href="/auth/login" className="font-bold text-blue-600 hover:underline">
                 Sign in

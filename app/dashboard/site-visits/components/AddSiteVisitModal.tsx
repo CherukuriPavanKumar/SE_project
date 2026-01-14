@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { X, MapPin, User, Plus, UserCheck, Calendar, Clock, Loader2 } from "lucide-react";
-// import { leadSources, leadStages } from "@/lib/constants";
 import type { SiteVisit, Lead } from "@/lib/types";
 
 // Redux imports
@@ -114,6 +113,10 @@ export default function AddSiteVisitModal({ onClose }: AddSiteVisitModalProps) {
     setIsLoading(false);
   };
 
+  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm";
+  const selectClass = "w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm appearance-none cursor-pointer";
+  const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors";
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
@@ -174,14 +177,14 @@ export default function AddSiteVisitModal({ onClose }: AddSiteVisitModalProps) {
                       </select>
                     </div>
                   </div>
-                  <button onClick={handleCreateLead} disabled={isLoading} className="w-full py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                  <button onClick={handleCreateLead} disabled={isLoading} className="w-full py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Save & Use This Lead"}
                   </button>
                 </div>
               ) : (
                 // Select Existing
                 <div className="relative group">
-                  <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                  <UserCheck className={iconClass} />
                   <select
                     value={selectedLeadId}
                     onChange={(e) => {
@@ -189,7 +192,7 @@ export default function AddSiteVisitModal({ onClose }: AddSiteVisitModalProps) {
                       const l = leads.find(lead => lead.id === e.target.value);
                       if (l) setFormData({ ...formData, leadName: l.name, leadPhone: l.phone, assignedAgent: l.assignedTo });
                     }}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                    className={selectClass}
                   >
                     <option value="">Select an existing lead...</option>
                     {activeLeads.map((l) => (
@@ -210,14 +213,14 @@ export default function AddSiteVisitModal({ onClose }: AddSiteVisitModalProps) {
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">Select Property *</label>
                 <div className="relative group">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                  <MapPin className={iconClass} />
                   <select
                     value={formData.propertyTitle}
                     onChange={(e) => {
                       const p = properties.find(prop => prop.title === e.target.value);
                       if (p) setFormData({ ...formData, propertyTitle: p.title, propertyAddress: p.location });
                     }}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                    className={selectClass}
                   >
                     <option value="">Choose property...</option>
                     {availableProperties.map(p => <option key={p.id} value={p.title}>{p.title}</option>)}
@@ -230,15 +233,15 @@ export default function AddSiteVisitModal({ onClose }: AddSiteVisitModalProps) {
                 <div className="space-y-1.5">
                   <label className="block text-sm font-semibold text-gray-700">Date *</label>
                   <div className="relative group">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                    <input type="date" value={formData.visitDate} onChange={(e) => setFormData({...formData, visitDate: e.target.value})} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" />
+                    <Calendar className={iconClass} />
+                    <input type="date" value={formData.visitDate} onChange={(e) => setFormData({...formData, visitDate: e.target.value})} className={inputClass} />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-sm font-semibold text-gray-700">Time *</label>
                   <div className="relative group">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                    <input type="time" value={formData.visitTime} onChange={(e) => setFormData({...formData, visitTime: e.target.value})} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" />
+                    <Clock className={iconClass} />
+                    <input type="time" value={formData.visitTime} onChange={(e) => setFormData({...formData, visitTime: e.target.value})} className={inputClass} />
                   </div>
                 </div>
               </div>
@@ -247,11 +250,11 @@ export default function AddSiteVisitModal({ onClose }: AddSiteVisitModalProps) {
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">Conducting Agent *</label>
                 <div className="relative group">
-                  <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                  <UserCheck className={iconClass} />
                   <select
                     value={formData.assignedAgent}
                     onChange={(e) => setFormData({...formData, assignedAgent: e.target.value})}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                    className={selectClass}
                   >
                     <option value="">Assign to...</option>
                     {activeAgents.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}

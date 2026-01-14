@@ -16,9 +16,8 @@ import {
   LogOut,
   UserCog,
   Headphones,
+  X,
 } from "lucide-react";
-// import { useAppSelector } from "@/lib/redux/hooks";
-// import { selectUserProfile } from "@/lib/redux/slices/settingsSlice";
 import toast from "react-hot-toast";
 
 const navigation = [
@@ -35,70 +34,100 @@ const navigation = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  // const userProfile = useAppSelector(selectUserProfile);
 
   const handleSignOut = () => {
-    // Add logic here to clear auth tokens/storage
-    localStorage.removeItem("user"); 
+    localStorage.removeItem("user");
     toast.success("Signed out successfully");
     router.push("/auth/login");
   };
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-white border-r border-gray-200 shadow-sm z-30">
-      {/* Logo Area */}
-      <div className="flex h-16 items-center px-6 border-b border-gray-100">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-            <Home className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-lg font-bold text-gray-900 tracking-tight group-hover:text-blue-600 transition-colors">WebbHeads</span>
-        </Link>
+    <>
+      {/* Mobile Overlay - Only visible on small screens when sidebar is open */}
+      <div 
+        className={`fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onClose}
+      />
+
+      {/* Sidebar Container */}
+      <div 
+        className={`
+          fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 shadow-xl flex flex-col
+          transform transition-transform duration-300 ease-in-out
+          md:static md:translate-x-0 md:shadow-none
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        {/* Logo Area */}
+        <div className="flex h-16 items-center justify-between px-6 border-b border-gray-100 flex-shrink-0">
+          <Link href="/dashboard" className="flex items-center gap-3 group" onClick={onClose}>
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+              <Home className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-lg font-bold text-gray-900 tracking-tight group-hover:text-blue-600 transition-colors">
+              WebbHeads
+            </span>
+          </Link>
+          {/* Close button for mobile */}
+          <button 
+            onClick={onClose} 
+            className="md:hidden p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto no-scrollbar">
+          {navigation.map((item) => {
+            const isActive = item.exact 
+              ? pathname === item.href 
+              : pathname.startsWith(item.href);
+
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={onClose} // Close sidebar on link click (mobile)
+                className={`
+                  flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200
+                  ${
+                    isActive
+                      ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }
+                `}
+              >
+                <item.icon 
+                  className={`h-5 w-5 transition-colors ${isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600"}`} 
+                />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User Footer */}
+        <div className="border-t border-gray-100 p-4 bg-gray-50/50 flex-shrink-0">
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </button>
+        </div>
       </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto no-scrollbar">
-        {navigation.map((item) => {
-          // Robust active state detection
-          const isActive = item.exact 
-            ? pathname === item.href 
-            : pathname.startsWith(item.href);
-
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`
-                flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200
-                ${
-                  isActive
-                    ? "bg-blue-50 text-blue-700 shadow-sm"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }
-              `}
-            >
-              <item.icon 
-                className={`h-5 w-5 transition-colors ${isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600"}`} 
-              />
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* User Footer */}
-      <div className="border-t border-gray-100 p-4 bg-gray-50/50">
-        <button
-          onClick={handleSignOut}
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign out
-        </button>
-      </div>
-    </div>
+    </>
   );
 }

@@ -79,7 +79,7 @@ export default function LeadsPage() {
         phone: lead.phone,
         company: "",
         totalPurchases: 1,
-        totalValue: lead.budget, // Assuming budget becomes value
+        totalValue: lead.budget,
         propertiesOwned: [`Property via Lead ${lead.id}`],
         status: "Active" as const,
         joinedDate: new Date().toISOString().split("T")[0],
@@ -125,17 +125,17 @@ export default function LeadsPage() {
         <div className="flex items-center gap-3">
            <button
             onClick={handleResetFilters}
-            className="flex items-center gap-2 px-3 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+            className="flex items-center gap-2 px-3 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
           >
             <RefreshCcw className="h-4 w-4" />
-            Reset Filters
+            Reset
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
           >
             <Plus className="h-5 w-5" />
-            Add New Lead
+            Add Lead
           </button>
         </div>
       </div>

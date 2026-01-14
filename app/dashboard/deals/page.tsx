@@ -28,7 +28,7 @@ export default function DealsPage() {
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStage, setSelectedStage] = useState("All Stages");
-  const [selectedAgentRole, setSelectedAgentRole] = useState("All Roles"); // Changed from specific agent to role
+  const [selectedAgentRole, setSelectedAgentRole] = useState("All Roles");
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("All Payment Status");
   
   // Modals
@@ -115,7 +115,7 @@ export default function DealsPage() {
 
           <button
             onClick={handleResetFilters}
-            className="flex items-center gap-2 px-3 py-2.5 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
+            className="flex items-center gap-2 px-3 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
           >
             <RefreshCcw className="h-4 w-4" />
             Reset

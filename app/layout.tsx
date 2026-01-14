@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "../lib/redux/Provider";
@@ -18,6 +18,12 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "WebbHeads CRM - Real Estate Management",
   description: "Real Estate CRM for Modern Agencies",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

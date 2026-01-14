@@ -7,9 +7,9 @@ import {
   IndianRupee, 
   Bed, 
   Bath, 
-  Maximize, 
-  UserCheck, 
-  Tag 
+  Maximize,
+  Tag,
+  ChevronDown
 } from "lucide-react";
 import { propertyTypes, propertyStatuses } from "@/lib/constants";
 import type { Property } from "@/lib/types";
@@ -84,6 +84,10 @@ export default function AddPropertyModal({ onClose }: AddPropertyModalProps) {
     setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
   };
 
+  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm";
+  const selectClass = "w-full pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm appearance-none cursor-pointer";
+  const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors";
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
@@ -112,30 +116,36 @@ export default function AddPropertyModal({ onClose }: AddPropertyModalProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="md:col-span-2 space-y-1.5">
                   <label htmlFor="title" className="block text-sm font-semibold text-gray-700">Property Title *</label>
-                  <input type="text" id="title" required value={formData.title} onChange={handleChange} className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" placeholder="e.g. Luxury 3BHK Apartment" />
+                  <div className="relative group">
+                    <Tag className={iconClass} />
+                    <input type="text" id="title" required value={formData.title} onChange={handleChange} className={inputClass} placeholder="e.g. Luxury 3BHK Apartment" />
+                  </div>
                 </div>
                 
                 <div className="md:col-span-2 space-y-1.5">
                   <label htmlFor="location" className="block text-sm font-semibold text-gray-700">Location *</label>
                   <div className="relative group">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                    <input type="text" id="location" required value={formData.location} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" placeholder="e.g. Whitefield, Bangalore" />
+                    <MapPin className={iconClass} />
+                    <input type="text" id="location" required value={formData.location} onChange={handleChange} className={inputClass} placeholder="e.g. Whitefield, Bangalore" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <label htmlFor="price" className="block text-sm font-semibold text-gray-700">Price *</label>
                   <div className="relative group">
-                    <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                    <input type="text" id="price" required value={formData.price} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" placeholder="e.g. 1.5 Cr" />
+                    <IndianRupee className={iconClass} />
+                    <input type="text" id="price" required value={formData.price} onChange={handleChange} className={inputClass} placeholder="e.g. 1.5 Cr" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <label htmlFor="type" className="block text-sm font-semibold text-gray-700">Type *</label>
-                  <select id="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm appearance-none cursor-pointer">
-                    {propertyTypes.filter((t) => t !== "All Types").map((type) => <option key={type} value={type}>{type}</option>)}
-                  </select>
+                  <div className="relative group">
+                    <select id="type" value={formData.type} onChange={handleChange} className={`${selectClass} pl-4`}>
+                      {propertyTypes.filter((t) => t !== "All Types").map((type) => <option key={type} value={type}>{type}</option>)}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -149,24 +159,24 @@ export default function AddPropertyModal({ onClose }: AddPropertyModalProps) {
                 <div className="space-y-1.5">
                   <label htmlFor="bedrooms" className="block text-sm font-semibold text-gray-700">Bedrooms</label>
                   <div className="relative group">
-                    <Bed className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                    <input type="number" id="bedrooms" required value={formData.bedrooms} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" />
+                    <Bed className={iconClass} />
+                    <input type="number" id="bedrooms" required value={formData.bedrooms} onChange={handleChange} className={inputClass} />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <label htmlFor="bathrooms" className="block text-sm font-semibold text-gray-700">Bathrooms</label>
                   <div className="relative group">
-                    <Bath className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                    <input type="number" id="bathrooms" required value={formData.bathrooms} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" />
+                    <Bath className={iconClass} />
+                    <input type="number" id="bathrooms" required value={formData.bathrooms} onChange={handleChange} className={inputClass} />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <label htmlFor="area" className="block text-sm font-semibold text-gray-700">Area</label>
                   <div className="relative group">
-                    <Maximize className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                    <input type="text" id="area" required value={formData.area} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" placeholder="1500 sqft" />
+                    <Maximize className={iconClass} />
+                    <input type="text" id="area" required value={formData.area} onChange={handleChange} className={inputClass} placeholder="1500 sqft" />
                   </div>
                 </div>
               </div>
@@ -174,19 +184,22 @@ export default function AddPropertyModal({ onClose }: AddPropertyModalProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <label htmlFor="status" className="block text-sm font-semibold text-gray-700">Status</label>
-                  <select id="status" value={formData.status} onChange={handleChange} className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm appearance-none cursor-pointer">
-                    {propertyStatuses.filter((s) => s !== "All Status").map((status) => <option key={status} value={status}>{status}</option>)}
-                  </select>
+                  <div className="relative group">
+                    <select id="status" value={formData.status} onChange={handleChange} className={`${selectClass} pl-4`}>
+                      {propertyStatuses.filter((s) => s !== "All Status").map((status) => <option key={status} value={status}>{status}</option>)}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <label htmlFor="listedBy" className="block text-sm font-semibold text-gray-700">Listed By</label>
                   <div className="relative group">
-                    <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                    <select id="listedBy" value={formData.listedBy} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm appearance-none cursor-pointer">
+                    <select id="listedBy" value={formData.listedBy} onChange={handleChange} className={`${selectClass} pl-4`}>
                       <option value="">-- Select Agent --</option>
                       {activeAgents.map((agent) => <option key={agent.id} value={agent.name}>{agent.name} ({agent.role})</option>)}
                     </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -200,8 +213,8 @@ export default function AddPropertyModal({ onClose }: AddPropertyModalProps) {
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-50">
-              <button type="button" onClick={onClose} disabled={isLoading} className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-semibold shadow-sm">Cancel</button>
-              <button type="submit" disabled={isLoading} className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg text-sm font-semibold flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+              <button type="button" onClick={onClose} disabled={isLoading} className="px-5 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 font-medium transition-colors shadow-sm">Cancel</button>
+              <button type="submit" disabled={isLoading} className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-sm font-medium flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "List Property"}
               </button>
             </div>

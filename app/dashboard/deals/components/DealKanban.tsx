@@ -16,7 +16,6 @@ interface DealKanbanProps {
   onViewDetails: (deal: Deal) => void;
 }
 
-// ✅ FIX: Column definitions moved outside with Icons for the "Neat" look
 const COLUMNS = [
   { 
     id: "Qualified", 
@@ -69,6 +68,7 @@ export default function DealKanban({ deals, onViewDetails }: DealKanbanProps) {
       if (groups[deal.dealStage]) {
         groups[deal.dealStage].push(deal);
       } else {
+        // Fallback for unknown stages
         if (!groups["Qualified"]) groups["Qualified"] = [];
         groups["Qualified"].push(deal); 
       }
@@ -79,25 +79,25 @@ export default function DealKanban({ deals, onViewDetails }: DealKanbanProps) {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-280px)] min-h-[500px]">
       {COLUMNS.map((col) => (
-        <div key={col.id} className="min-w-[300px] w-80 flex flex-col h-full bg-gray-50/50 rounded-xl border border-gray-200">
+        <div key={col.id} className="min-w-[300px] w-80 flex flex-col h-full bg-gray-50/50 rounded-xl border border-gray-200 overflow-hidden">
           
-          {/* Column Header (Matches Site Visits Style) */}
-          <div className="p-4 border-b border-gray-200 bg-white rounded-t-xl sticky top-0 z-10 flex justify-between items-center">
+          {/* Column Header */}
+          <div className="p-4 border-b border-gray-200 bg-white flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className={`p-1.5 rounded-md ${col.bg}`}>
                 <col.icon className={`h-4 w-4 ${col.color}`} />
               </div>
-              <h3 className="font-semibold text-gray-900 text-sm">{col.label}</h3>
+              <h3 className="font-bold text-gray-900 text-sm">{col.label}</h3>
             </div>
-            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-bold border border-gray-200">
               {groupedDeals[col.id]?.length || 0}
             </span>
           </div>
 
           {/* Cards Container */}
-          <div className="flex-1 p-3 overflow-y-auto space-y-3">
+          <div className="flex-1 p-3 overflow-y-auto space-y-3 scroll-smooth">
             {groupedDeals[col.id]?.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-32 text-gray-400 text-sm italic border-2 border-dashed border-gray-100 rounded-lg m-1">
+              <div className="flex flex-col items-center justify-center h-32 text-gray-400 text-sm italic border-2 border-dashed border-gray-200 rounded-lg m-1">
                 No deals
               </div>
             ) : (
@@ -107,12 +107,12 @@ export default function DealKanban({ deals, onViewDetails }: DealKanbanProps) {
                   onClick={() => onViewDetails(deal)}
                   className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:border-blue-300 relative"
                 >
-                  {/* Top Row: ID & Menu */}
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="text-[10px] font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md border border-gray-200">
+                  {/* Top Row */}
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[10px] font-mono font-medium text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded-md border border-gray-100">
                       {deal.id}
                     </span>
-                    <button className="text-gray-300 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="text-gray-300 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded">
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </div>
@@ -123,17 +123,17 @@ export default function DealKanban({ deals, onViewDetails }: DealKanbanProps) {
                   </h4>
                   
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
-                    <User className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">{deal.leadName}</span>
+                    <User className="h-3 w-3 flex-shrink-0 text-blue-500" />
+                    <span className="truncate font-medium">{deal.leadName}</span>
                   </div>
 
-                  {/* Footer: Value & Probability */}
+                  {/* Footer */}
                   <div className="flex flex-col gap-2 pt-3 border-t border-gray-50">
                     <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-1 text-gray-900 font-bold text-sm">
-                        <span className="text-green-600">{deal.dealValue}</span>
+                      <div className="font-bold text-sm text-gray-900">
+                        {deal.dealValue}
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                      <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
                         <Calendar className="h-3 w-3" />
                         {deal.closingDate}
                       </div>
