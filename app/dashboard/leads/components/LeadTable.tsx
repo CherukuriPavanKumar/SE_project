@@ -1,4 +1,4 @@
-import { Eye, Phone, Trash2 } from "lucide-react";
+import { Eye, Phone, Trash2, Home } from "lucide-react";
 import type { Lead } from "@/lib/types";
 import toast from "react-hot-toast";
 
@@ -15,9 +15,10 @@ interface LeadTableProps {
   leads: Lead[];
   onStageClick: (lead: Lead) => void;
   onDelete: (id: string) => void;
+  onViewDetails?: (lead: Lead) => void;
 }
 
-export default function LeadTable({ leads, onStageClick, onDelete }: LeadTableProps) {
+export default function LeadTable({ leads, onStageClick, onDelete, onViewDetails }: LeadTableProps) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -26,8 +27,8 @@ export default function LeadTable({ leads, onStageClick, onDelete }: LeadTablePr
             <tr>
               <th className="px-6 py-4">Lead Details</th>
               <th className="px-6 py-4">Contact Info</th>
+              <th className="px-6 py-4">Interest</th>
               <th className="px-6 py-4">Source</th>
-              <th className="px-6 py-4">Budget</th>
               <th className="px-6 py-4">Stage</th>
               <th className="px-6 py-4">Assigned To</th>
               <th className="px-6 py-4 text-center">Actions</th>
@@ -45,7 +46,11 @@ export default function LeadTable({ leads, onStageClick, onDelete }: LeadTablePr
               </tr>
             ) : (
               leads.map((lead) => (
-                <tr key={lead.id} className="hover:bg-gray-50 transition-colors group">
+                <tr 
+                    key={lead.id} 
+                    className="hover:bg-gray-50 transition-colors group cursor-pointer"
+                    onClick={() => onViewDetails && onViewDetails(lead)}
+                >
                   {/* Lead Name & Avatar */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -67,6 +72,25 @@ export default function LeadTable({ leads, onStageClick, onDelete }: LeadTablePr
                     </div>
                   </td>
 
+                  {/* Interest / Budget */}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      {lead.propertyInterest && lead.propertyInterest.length > 0 ? (
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-blue-600 font-medium text-xs flex items-center gap-1 mb-0.5">
+                                <Home className="h-3 w-3" /> {lead.propertyInterest[0]}
+                            </span>
+                            {lead.propertyInterest.length > 1 && (
+                                <span className="text-xs text-gray-400 pl-4">+{lead.propertyInterest.length - 1} more</span>
+                            )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs italic">General Inquiry</span>
+                      )}
+                      <span className="text-gray-900 font-semibold mt-1">{lead.budget}</span>
+                    </div>
+                  </td>
+
                   {/* Source */}
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
@@ -74,15 +98,10 @@ export default function LeadTable({ leads, onStageClick, onDelete }: LeadTablePr
                     </span>
                   </td>
 
-                  {/* Budget */}
-                  <td className="px-6 py-4">
-                    <span className="font-medium text-gray-900">{lead.budget}</span>
-                  </td>
-
                   {/* Stage Badge */}
                   <td className="px-6 py-4">
                     <button
-                      onClick={() => onStageClick(lead)}
+                      onClick={(e) => { e.stopPropagation(); onStageClick(lead); }}
                       className={`px-3 py-1 inline-flex items-center text-xs font-bold rounded-full border shadow-sm hover:shadow-md transition-all ${
                         STAGE_STYLES[lead.stage] || "bg-gray-50 text-gray-600 border-gray-200"
                       }`}
@@ -105,7 +124,7 @@ export default function LeadTable({ leads, onStageClick, onDelete }: LeadTablePr
 
                   {/* Actions */}
                   <td className="px-6 py-4">
-                    <div className="flex items-center justify-center gap-2 opacity-100">
+                    <div className="flex items-center justify-center gap-2 opacity-100" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => toast.success(`Calling ${lead.phone}...`)}
                         className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-100"
@@ -114,7 +133,7 @@ export default function LeadTable({ leads, onStageClick, onDelete }: LeadTablePr
                         <Phone className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => toast("Details view coming soon")}
+                        onClick={() => onViewDetails && onViewDetails(lead)}
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
                         title="View Details"
                       >

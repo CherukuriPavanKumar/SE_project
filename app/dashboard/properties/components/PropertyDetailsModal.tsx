@@ -1,14 +1,16 @@
 import Image from "next/image";
-import { X, MapPin, Bed, Bath, Maximize, ArrowRight, Share2, Heart } from "lucide-react";
-import type { Property } from "@/lib/types";
+import { X, MapPin, Bed, Bath, Maximize, ArrowRight, Share2, Heart, User, Phone, Mail } from "lucide-react";
+import type { Property, Lead } from "@/lib/types";
 import toast from "react-hot-toast";
 
 interface PropertyDetailsModalProps {
   property: Property;
+  interestedLeads: Lead[];
   onClose: () => void;
+  onViewLead: (lead: Lead) => void; // New callback
 }
 
-export default function PropertyDetailsModal({ property, onClose }: PropertyDetailsModalProps) {
+export default function PropertyDetailsModal({ property, interestedLeads, onClose, onViewLead }: PropertyDetailsModalProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Available": return "bg-green-100 text-green-700 ring-1 ring-green-600/20";
@@ -34,7 +36,7 @@ export default function PropertyDetailsModal({ property, onClose }: PropertyDeta
             <X className="h-5 w-5" />
           </button>
 
-          {/* Left Column: Image Gallery */}
+          {/* Left Column: Image */}
           <div className="w-full md:w-1/2 bg-gray-100 relative h-64 md:h-auto group">
             <Image
               src={property.image || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"}
@@ -44,8 +46,6 @@ export default function PropertyDetailsModal({ property, onClose }: PropertyDeta
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
-            
-            {/* Image Actions */}
             <div className="absolute bottom-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
               <button className="p-2.5 bg-white/90 text-gray-700 rounded-full hover:bg-white transition-colors shadow-sm backdrop-blur-sm">
                 <Heart className="h-4 w-4" />
@@ -59,7 +59,7 @@ export default function PropertyDetailsModal({ property, onClose }: PropertyDeta
           {/* Right Column: Content */}
           <div className="w-full md:w-1/2 flex flex-col h-full bg-white">
             
-            {/* Header (Sticky on scroll inside modal if needed, but here we use flex box) */}
+            {/* Header */}
             <div className="p-6 md:p-8 border-b border-gray-100 flex-shrink-0">
               <div className="flex items-start justify-between">
                 <div>
@@ -79,7 +79,6 @@ export default function PropertyDetailsModal({ property, onClose }: PropertyDeta
                     <span>{property.location}</span>
                   </div>
                 </div>
-                {/* Desktop Close Button */}
                 <button 
                   onClick={onClose} 
                   className="hidden md:flex p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -117,35 +116,54 @@ export default function PropertyDetailsModal({ property, onClose }: PropertyDeta
                 </div>
               </div>
 
-              {/* Description */}
+              {/* Potential Leads Section */}
               <div>
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Property Details</h3>
-                <p className="text-gray-600 leading-relaxed text-sm">
-                  {property.description || "This luxury property features modern amenities, spacious interiors, and is located in a prime neighborhood. Perfect for families looking for comfort and style. Contact us for a guided tour."}
-                </p>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <User className="h-4 w-4 text-indigo-600" /> Potential Leads ({interestedLeads.length})
+                </h3>
+                {interestedLeads.length > 0 ? (
+                  <div className="space-y-2">
+                    {interestedLeads.map((lead) => (
+                      <div 
+                        key={lead.id} 
+                        onClick={() => onViewLead(lead)} // Handle Click
+                        className="flex items-center justify-between p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 transition-all cursor-pointer group"
+                      >
+                        <div>
+                          <p className="text-sm font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">{lead.name}</p>
+                          <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
+                            <span className="flex items-center gap-1"><Phone className="h-3 w-3"/> {lead.phone}</span>
+                            <span className="flex items-center gap-1"><Mail className="h-3 w-3"/> {lead.email}</span>
+                          </div>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white ${
+                          lead.stage === "New Lead" ? "text-blue-600 border-blue-200" : 
+                          lead.stage === "Closed" ? "text-green-600 border-green-200" : "text-gray-600 border-gray-200"
+                        }`}>
+                          {lead.stage}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">No leads have expressed interest in this property yet.</p>
+                )}
               </div>
 
-              {/* Agent Info */}
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-blue-50/50 border border-blue-100">
-                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
-                  {property.listedBy.charAt(0)}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-900">Listed by {property.listedBy}</p>
-                  <p className="text-xs text-blue-600 font-medium">Real Estate Agent</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold">Listed On</p>
-                  <p className="text-xs font-semibold text-gray-900">{property.listedDate}</p>
-                </div>
+              {/* Description */}
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">About Property</h3>
+                <p className="text-gray-600 leading-relaxed text-sm">
+                  {property.description || "No detailed description available."}
+                </p>
               </div>
             </div>
 
             {/* Footer Actions */}
             <div className="p-6 md:p-8 border-t border-gray-100 bg-gray-50 flex-shrink-0 flex gap-3">
               <button 
-                onClick={() => toast.success("Scheduling...")}
-                className="flex-1 py-3 px-4 bg-white border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm text-sm"
+                onClick={() => toast.success("Scheduling visit...")}
+                className="flex-1 py-3 px-4 bg-white border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm"
               >
                 Schedule Visit
               </button>

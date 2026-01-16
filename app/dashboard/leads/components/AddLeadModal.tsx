@@ -10,7 +10,9 @@ import {
   Tag, 
   UserCheck, 
   Calendar, 
-  Clock 
+  Clock,
+  Home,
+  Check
 } from "lucide-react";
 import { leadSources, leadStages } from "@/lib/constants";
 import type { Lead } from "@/lib/types";
@@ -28,6 +30,8 @@ export default function AddLeadModal({ onClose }: AddLeadModalProps) {
   const dispatch = useAppDispatch();
   const leads = useAppSelector((state) => state.leads.items);
   const agents = useAppSelector((state) => state.agents.items);
+  // Get properties from Redux
+  const properties = useAppSelector((state) => state.properties.items);
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,11 +47,28 @@ export default function AddLeadModal({ onClose }: AddLeadModalProps) {
     notes: "",
   });
 
+  // State for multiple property selection
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  const [isPropertyDropdownOpen, setIsPropertyDropdownOpen] = useState(false);
+
   const activeAgents = useMemo(() => {
     return agents.filter((agent) => agent.status === "Active");
   }, [agents]);
 
+  // Filter only available properties for new leads
+  const availableProperties = useMemo(() => {
+    return properties.filter((p) => p.status === "Available" || p.status === "Under Negotiation");
+  }, [properties]);
+
   const formStages = leadStages.filter((s) => s !== "All Stages" && s !== "Closed");
+
+  const toggleProperty = (propertyTitle: string) => {
+    setSelectedProperties(prev => 
+      prev.includes(propertyTitle) 
+        ? prev.filter(p => p !== propertyTitle)
+        : [...prev, propertyTitle]
+    );
+  };
 
   const handleAddLead = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +91,7 @@ export default function AddLeadModal({ onClose }: AddLeadModalProps) {
         budget: formData.budget,
         stage: formData.stage,
         assignedTo: formData.assignedTo,
+        propertyInterest: selectedProperties, // Array of strings
         lastContact: "Just now",
         nextFollowUp: nextFollowUp,
         notes: formData.notes,
@@ -99,7 +121,7 @@ export default function AddLeadModal({ onClose }: AddLeadModalProps) {
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <div className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-60 backdrop-blur-sm" onClick={onClose}></div>
 
-        <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-100">
+        <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-visible shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-100">
           
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50/50">
             <div>
@@ -148,13 +170,66 @@ export default function AddLeadModal({ onClose }: AddLeadModalProps) {
               </div>
             </div>
 
-            {/* Lead Details */}
+            {/* Interest & Budget */}
             <div className="space-y-4 pt-4 border-t border-gray-100">
               <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider flex items-center gap-2">
-                <Tag className="h-3 w-3" /> Opportunity Details
+                <Home className="h-3 w-3" /> Interest & Budget
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 
+                {/* Multi-Select Property Dropdown */}
+                <div className="md:col-span-2 space-y-1.5 relative">
+                  <label className="block text-sm font-semibold text-gray-700">Interested Properties</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsPropertyDropdownOpen(!isPropertyDropdownOpen)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-left focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <span className={`block truncate ${selectedProperties.length === 0 ? "text-gray-400" : "text-gray-900"}`}>
+                          {selectedProperties.length === 0 
+                            ? "Select properties..." 
+                            : `${selectedProperties.length} selected`}
+                        </span>
+                      </div>
+                    </button>
+
+                    {isPropertyDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                        {availableProperties.map((prop) => (
+                          <div
+                            key={prop.id}
+                            onClick={() => toggleProperty(prop.title)}
+                            className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
+                          >
+                            <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedProperties.includes(prop.title) ? "bg-blue-600 border-blue-600" : "border-gray-300"}`}>
+                              {selectedProperties.includes(prop.title) && <Check className="h-3 w-3 text-white" />}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{prop.title}</p>
+                              <p className="text-xs text-gray-500">{prop.location} • {prop.price}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Selected Tags Display */}
+                  {selectedProperties.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedProperties.map(prop => (
+                        <span key={prop} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-md border border-blue-100">
+                          {prop}
+                          <button type="button" onClick={() => toggleProperty(prop)} className="hover:text-blue-900"><X className="h-3 w-3" /></button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-1.5">
                   <label htmlFor="budget" className="block text-sm font-semibold text-gray-700">Budget Range</label>
                   <div className="relative group">
@@ -174,7 +249,16 @@ export default function AddLeadModal({ onClose }: AddLeadModalProps) {
                     </select>
                   </div>
                 </div>
+              </div>
+            </div>
 
+            {/* Workflow */}
+            <div className="space-y-4 pt-4 border-t border-gray-100">
+              <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider flex items-center gap-2">
+                <Tag className="h-3 w-3" /> Workflow
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                
                 <div className="space-y-1.5">
                   <label htmlFor="stage" className="block text-sm font-semibold text-gray-700">Stage</label>
                   <div className="relative group">

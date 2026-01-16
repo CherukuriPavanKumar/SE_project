@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { Plus, RefreshCcw } from "lucide-react";
-import type { Lead } from "@/lib/types";
+import type { Lead, Property } from "@/lib/types";
 
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
 import {
@@ -16,12 +16,16 @@ import LeadFilters from "./components/LeadFilters";
 import LeadTable from "./components/LeadTable";
 import StageChangeModal from "./components/StageChangeModal";
 import AddLeadModal from "./components/AddLeadModal";
+import LeadDetailsModal from "./components/LeadDetailsModal";
+// Reuse Property Details Modal
+import PropertyDetailsModal from "../properties/components/PropertyDetailsModal";
 
 import toast from "react-hot-toast";
 
 export default function LeadsPage() {
   const leads = useAppSelector((state) => state.leads.items);
   const agents = useAppSelector((state) => state.agents.items);
+  const properties = useAppSelector((state) => state.properties.items); 
   const dispatch = useAppDispatch();
 
   // Filter States
@@ -33,23 +37,27 @@ export default function LeadsPage() {
   // Modal States
   const [showAddModal, setShowAddModal] = useState(false);
   const [showStageModal, setShowStageModal] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showPropertyDetails, setShowPropertyDetails] = useState(false); // New State
 
-  // ⚡ OPTIMIZATION: Memoized Filter Logic
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null); // New State
+
+  // OPTIMIZATION: Memoized Filter Logic
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
-      // 1. Search Filter (Name, Phone, Email)
       const query = searchQuery.toLowerCase();
+      const matchesProperty = lead.propertyInterest?.some(p => p.toLowerCase().includes(query));
+
       const matchesSearch =
         lead.name.toLowerCase().includes(query) ||
         lead.phone.includes(query) ||
-        lead.email.toLowerCase().includes(query);
+        lead.email.toLowerCase().includes(query) ||
+        matchesProperty;
 
-      // 2. Dropdown Filters
       const matchesStage = selectedStage === "All Stages" || lead.stage === selectedStage;
       const matchesSource = selectedSource === "All Sources" || lead.source === selectedSource;
 
-      // 3. Agent Role Filter
       let matchesAgentRole = true;
       if (selectedAgentRole !== "All Agents") {
         const agent = agents.find((a) => a.name === lead.assignedTo);
@@ -60,7 +68,6 @@ export default function LeadsPage() {
     });
   }, [leads, searchQuery, selectedStage, selectedSource, selectedAgentRole, agents]);
 
-  // Handler: Reset Filters
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedStage("All Stages");
@@ -69,7 +76,27 @@ export default function LeadsPage() {
     toast.success("Filters reset");
   };
 
-  // Handler: Change Stage (and Convert to Client)
+  // Handle Property Click from Lead Modal
+  const handleViewProperty = (propertyName: string) => {
+    const property = properties.find(p => p.title === propertyName);
+    if (property) {
+        setSelectedProperty(property);
+        setShowPropertyDetails(true);
+        // Note: We keep the Lead Details modal open underneath
+    } else {
+        toast.error("Property details not found");
+    }
+  };
+
+  // Helper for Property Modal to jump back to a lead (if needed, though rare here)
+  const handleViewLeadFromProperty = (lead: Lead) => {
+      // If we are already viewing a lead and open a property, clicking a lead in that property 
+      // essentially just switches the "Selected Lead" context.
+      setSelectedLead(lead);
+      setShowPropertyDetails(false); // Close property to show the lead
+      setShowDetailsModal(true); // Ensure lead modal is open
+  };
+
   const handleStageChange = useCallback((lead: Lead, newStage: string) => {
     if (newStage === "Closed") {
       const newClient = {
@@ -80,18 +107,17 @@ export default function LeadsPage() {
         company: "",
         totalPurchases: 1,
         totalValue: lead.budget,
-        propertiesOwned: [`Property via Lead ${lead.id}`],
+        propertiesOwned: lead.propertyInterest && lead.propertyInterest.length > 0 ? lead.propertyInterest : [`Converted from Lead ${lead.id}`],
         status: "Active" as const,
         joinedDate: new Date().toISOString().split("T")[0],
         lastInteraction: new Date().toISOString().split("T")[0],
         preferredAgent: lead.assignedTo,
         tags: ["Converted Lead"],
-        notes: `Converted from lead. ${lead.notes || ""}`,
+        notes: `Converted from lead. Interest: ${lead.propertyInterest?.join(", ") || "General"}. ${lead.notes || ""}`,
       };
 
       dispatch(addClientAction(newClient));
       dispatch(updateLeadAction({ id: lead.id, data: { stage: "Closed" } }));
-
       toast.success(`${lead.name} converted to Client! 🎉`);
     } else if (newStage === "Discarded") {
       dispatch(updateLeadAction({ id: lead.id, data: { stage: "Discarded" } }));
@@ -100,21 +126,22 @@ export default function LeadsPage() {
       dispatch(updateLeadAction({ id: lead.id, data: { stage: newStage } }));
       toast.success(`Stage updated to ${newStage}`);
     }
+    
     setShowStageModal(false);
+    setShowDetailsModal(false);
     setSelectedLead(null);
   }, [dispatch]);
 
-  // Handler: Delete Lead
   const handleDeleteLead = (id: string) => {
     if (confirm("Are you sure you want to permanently delete this lead?")) {
       dispatch(deleteLeadAction(id));
       toast.success("Lead deleted successfully");
+      setShowDetailsModal(false);
     }
   };
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Lead Management</h1>
@@ -140,10 +167,8 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <LeadStats leads={leads} />
 
-      {/* Filter Bar */}
       <LeadFilters
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -155,7 +180,6 @@ export default function LeadsPage() {
         setSelectedAgentRole={setSelectedAgentRole}
       />
 
-      {/* Data Table */}
       <LeadTable
         leads={filteredLeads}
         onStageClick={(lead) => {
@@ -163,6 +187,10 @@ export default function LeadsPage() {
           setShowStageModal(true);
         }}
         onDelete={handleDeleteLead}
+        onViewDetails={(lead) => {
+          setSelectedLead(lead);
+          setShowDetailsModal(true);
+        }}
       />
 
       {/* Modals */}
@@ -171,6 +199,28 @@ export default function LeadsPage() {
           lead={selectedLead}
           onClose={() => setShowStageModal(false)}
           onStageChange={handleStageChange}
+        />
+      )}
+
+      {/* Lead Details Modal */}
+      {showDetailsModal && selectedLead && (
+        <LeadDetailsModal
+          lead={selectedLead}
+          onClose={() => setShowDetailsModal(false)}
+          onStageChange={handleStageChange}
+          onDelete={() => handleDeleteLead(selectedLead.id)}
+          onViewProperty={handleViewProperty} // Pass the handler
+        />
+      )}
+
+      {/* Property Details Modal (Stacked on Top) */}
+      {showPropertyDetails && selectedProperty && (
+        <PropertyDetailsModal 
+            property={selectedProperty}
+            // Pass interested leads for this property (using global leads state)
+            interestedLeads={leads.filter(l => l.propertyInterest?.includes(selectedProperty.title))}
+            onClose={() => setShowPropertyDetails(false)}
+            onViewLead={handleViewLeadFromProperty}
         />
       )}
 

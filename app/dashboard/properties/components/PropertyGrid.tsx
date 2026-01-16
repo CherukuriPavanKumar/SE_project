@@ -1,15 +1,16 @@
 import Image from "next/image";
-import { Home, MapPin, Bed, Bath, Maximize, Edit, Trash2, Eye } from "lucide-react";
-import type { Property } from "@/lib/types";
+import { Home, MapPin, Bed, Bath, Maximize, Edit, Trash2, Eye, User } from "lucide-react";
+import type { Property, Lead } from "@/lib/types";
 import toast from "react-hot-toast";
 
 interface PropertyGridProps {
   properties: Property[];
+  allLeads: Lead[]; // Receive all leads to calculate interest count
   onViewDetails: (property: Property) => void;
   onDelete: (id: string) => void;
 }
 
-export default function PropertyGrid({ properties, onViewDetails, onDelete }: PropertyGridProps) {
+export default function PropertyGrid({ properties, allLeads, onViewDetails, onDelete }: PropertyGridProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Available": return "bg-green-100 text-green-700";
@@ -30,102 +31,117 @@ export default function PropertyGrid({ properties, onViewDetails, onDelete }: Pr
           <p className="text-gray-500 mt-1">Try adjusting your search or filters to find what you&apos;re looking for.</p>
         </div>
       ) : (
-        properties.map((property) => (
-          <div
-            key={property.id}
-            className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full"
-            onClick={() => onViewDetails(property)}
-          >
-            {/* Image Section */}
-            <div className="relative h-56 w-full bg-gray-100 overflow-hidden">
-              <Image
-                src={property.image || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"} 
-                alt={property.title}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              {/* Badges */}
-              <div className="absolute top-3 right-3 z-10">
-                <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold shadow-sm uppercase tracking-wider ${getStatusColor(property.status)}`}>
-                  {property.status}
-                </span>
-              </div>
-              <div className="absolute bottom-3 left-3 z-10">
-                <span className="px-2.5 py-1 bg-white/90 backdrop-blur-md rounded-md text-[10px] font-bold text-gray-900 shadow-sm border border-white/50 uppercase tracking-wide">
-                  {property.type}
-                </span>
-              </div>
-              
-              {/* Hover Actions */}
-              <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0 z-10">
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onViewDetails(property); }}
-                  className="p-2 bg-white text-blue-600 rounded-full hover:bg-blue-50 transition-colors shadow-lg"
-                  title="View Details"
-                >
-                  <Eye className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+        properties.map((property) => {
+          // Calculate interested leads for this specific property
+          const interestedCount = allLeads.filter(lead => 
+            lead.propertyInterest?.includes(property.title)
+          ).length;
 
-            {/* Content Section */}
-            <div className="p-5 flex flex-col flex-grow">
-              <div className="flex-grow">
-                <h3 className="text-base font-bold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors">{property.title}</h3>
-                <div className="flex items-center gap-1.5 text-gray-500 mb-4">
-                  <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span className="text-xs line-clamp-1">{property.location}</span>
+          return (
+            <div
+              key={property.id}
+              className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full"
+              onClick={() => onViewDetails(property)}
+            >
+              {/* Image Section */}
+              <div className="relative h-56 w-full bg-gray-100 overflow-hidden">
+                <Image
+                  src={property.image || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"} 
+                  alt={property.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                {/* Badges */}
+                <div className="absolute top-3 right-3 z-10">
+                  <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold shadow-sm uppercase tracking-wider ${getStatusColor(property.status)}`}>
+                    {property.status}
+                  </span>
                 </div>
-
-                {/* Specs Grid */}
-                <div className="grid grid-cols-3 gap-2 py-3 border-t border-gray-100">
-                  <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
-                    <Bed className="h-4 w-4 text-gray-400 mb-1" />
-                    <span className="text-sm font-semibold text-gray-900">{property.bedrooms}</span>
-                    <span className="text-[10px] text-gray-400 uppercase font-bold">Beds</span>
-                  </div>
-                  <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
-                    <Bath className="h-4 w-4 text-gray-400 mb-1" />
-                    <span className="text-sm font-semibold text-gray-900">{property.bathrooms}</span>
-                    <span className="text-[10px] text-gray-400 uppercase font-bold">Baths</span>
-                  </div>
-                  <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
-                    <Maximize className="h-4 w-4 text-gray-400 mb-1" />
-                    <span className="text-sm font-semibold text-gray-900 truncate max-w-full px-1">{property.area}</span>
-                    <span className="text-[10px] text-gray-400 uppercase font-bold">Sqft</span>
-                  </div>
+                <div className="absolute bottom-3 left-3 z-10">
+                  <span className="px-2.5 py-1 bg-white/90 backdrop-blur-md rounded-md text-[10px] font-bold text-gray-900 shadow-sm border border-white/50 uppercase tracking-wide">
+                    {property.type}
+                  </span>
                 </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100">
-                <div>
-                  <p className="text-lg font-bold text-blue-600">{property.price}</p>
-                  <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mt-0.5">By {property.listedBy}</p>
-                </div>
-                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Edit"
-                    onClick={() => toast("Edit feature coming soon")}
+                
+                {/* Hover Actions */}
+                <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0 z-10">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onViewDetails(property); }}
+                    className="p-2 bg-white text-blue-600 rounded-full hover:bg-blue-50 transition-colors shadow-lg"
+                    title="View Details"
                   >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete"
-                    onClick={() => onDelete(property.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
+                    <Eye className="h-4 w-4" />
                   </button>
                 </div>
               </div>
+
+              {/* Content Section */}
+              <div className="p-5 flex flex-col flex-grow">
+                <div className="flex-grow">
+                  <h3 className="text-base font-bold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors">{property.title}</h3>
+                  <div className="flex items-center gap-1.5 text-gray-500 mb-4">
+                    <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span className="text-xs line-clamp-1">{property.location}</span>
+                  </div>
+
+                  {/* Leads Indicator */}
+                  {interestedCount > 0 && (
+                    <div className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md w-fit">
+                      <User className="h-3 w-3" />
+                      {interestedCount} Potential Lead{interestedCount !== 1 ? 's' : ''}
+                    </div>
+                  )}
+
+                  {/* Specs Grid */}
+                  <div className="grid grid-cols-3 gap-2 py-3 border-t border-gray-100">
+                    <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
+                      <Bed className="h-4 w-4 text-gray-400 mb-1" />
+                      <span className="text-sm font-semibold text-gray-900">{property.bedrooms}</span>
+                      <span className="text-[10px] text-gray-400 uppercase font-bold">Beds</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
+                      <Bath className="h-4 w-4 text-gray-400 mb-1" />
+                      <span className="text-sm font-semibold text-gray-900">{property.bathrooms}</span>
+                      <span className="text-[10px] text-gray-400 uppercase font-bold">Baths</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
+                      <Maximize className="h-4 w-4 text-gray-400 mb-1" />
+                      <span className="text-sm font-semibold text-gray-900 truncate max-w-full px-1">{property.area}</span>
+                      <span className="text-[10px] text-gray-400 uppercase font-bold">Sqft</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100">
+                  <div>
+                    <p className="text-lg font-bold text-blue-600">{property.price}</p>
+                    <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mt-0.5">By {property.listedBy}</p>
+                  </div>
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Edit"
+                      onClick={() => toast("Edit feature coming soon")}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete"
+                      onClick={() => onDelete(property.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   );

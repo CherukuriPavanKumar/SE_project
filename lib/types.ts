@@ -13,6 +13,7 @@ export interface Lead {
   budget: string;
   stage: string;
   assignedTo: string;
+  propertyInterest?: string[];
   lastContact: string;
   nextFollowUp: string;
   notes: string;
