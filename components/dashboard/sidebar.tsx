@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { signout } from "@/app/auth/actions"; // Import the Server Action
 import {
   LayoutDashboard,
   Users,
@@ -41,17 +42,18 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
-  const handleSignOut = () => {
-    localStorage.removeItem("user");
-    toast.success("Signed out successfully");
-    router.push("/auth/login");
+  const handleSignOut = async () => {
+    // 1. User Feedback
+    toast.success("Signing out...");
+    
+    // 2. Call Server Action (Clears cookies & Redirects)
+    await signout();
   };
 
   return (
     <>
-      {/* Mobile Overlay - Only visible on small screens when sidebar is open */}
+      {/* Mobile Overlay */}
       <div 
         className={`fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -78,7 +80,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               WebbHeads
             </span>
           </Link>
-          {/* Close button for mobile */}
           <button 
             onClick={onClose} 
             className="md:hidden p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
@@ -98,7 +99,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={onClose} // Close sidebar on link click (mobile)
+                onClick={onClose}
                 className={`
                   flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200
                   ${
@@ -119,13 +120,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* User Footer */}
         <div className="border-t border-gray-100 p-4 bg-gray-50/50 flex-shrink-0">
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </button>
+          <form action={handleSignOut}>
+            <button
+              type="submit"
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </button>
+          </form>
         </div>
       </div>
     </>

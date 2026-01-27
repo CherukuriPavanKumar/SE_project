@@ -1,0 +1,9 @@
+# AI Exclusion File
+#
+# This file specifies patterns for files and folders that the AI assistant
+# should ignore. The format is the same as .gitignore.
+# This is the most reliable way to prevent sensitive files from being
+# included in the context sent to the AI, even if they are open.
+
+# Environment variables and other secrets
+.env*
