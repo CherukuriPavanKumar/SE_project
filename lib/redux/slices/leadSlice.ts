@@ -1,7 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { mockLeads } from '@/lib/mock-data';
 import { type Lead } from '@/lib/types';
-
 
 interface LeadState {
   items: Lead[];
@@ -10,7 +8,7 @@ interface LeadState {
 }
 
 const initialState: LeadState = {
-  items: mockLeads,
+  items: [],
   loading: false,
   error: null,
 };
@@ -19,6 +17,12 @@ const leadSlice = createSlice({
   name: 'leads',
   initialState,
   reducers: {
+    // Action to populate leads from Supabase
+    setLeads: (state, action: PayloadAction<Lead[]>) => {
+      state.items = action.payload;
+      state.loading = false;
+      state.error = null;
+    },
     addLead: (state, action: PayloadAction<Lead>) => {
       state.items.unshift(action.payload);
     },
@@ -40,5 +44,5 @@ const leadSlice = createSlice({
   },
 });
 
-export const { addLead, updateLead, deleteLead, setLoading, setError } = leadSlice.actions;
+export const { setLeads, addLead, updateLead, deleteLead, setLoading, setError } = leadSlice.actions;
 export default leadSlice.reducer;
