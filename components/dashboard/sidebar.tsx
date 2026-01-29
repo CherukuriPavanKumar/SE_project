@@ -26,11 +26,11 @@ const navigation = [
   { name: "Leads", href: "/dashboard/leads", icon: Users },
   { name: "Properties", href: "/dashboard/properties", icon: Building2 },
   { name: "Site Visits", href: "/dashboard/site-visits", icon: Calendar },
-  { name: "Deals", href: "/dashboard/deals", icon: TrendingUp },
+  // { name: "Deals", href: "/dashboard/deals", icon: TrendingUp },
   { name: "Clients", href: "/dashboard/clients", icon: UserCheck },
   { name: "Agents", href: "/dashboard/agents", icon: UserCog },
   { name: "Documents", href: "/dashboard/documents", icon: FileText },
-  { name: "Support", href: "/dashboard/support", icon: Headphones },
+  // { name: "Support", href: "/dashboard/support", icon: Headphones },
   { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];

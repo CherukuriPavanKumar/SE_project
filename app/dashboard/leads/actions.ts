@@ -4,10 +4,12 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
-// Validation Schema
+// --- VALIDATION SCHEMAS ---
+
+// 1. Base Schema
 const LeadSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email").optional().or(z.literal('')),
+  email: z.string().email("Invalid email address").optional().or(z.literal('')),
   phone: z.string().min(10, "Phone number is too short"),
   source: z.string(),
   budget: z.string(),
@@ -20,16 +22,33 @@ const LeadSchema = z.object({
 
 type AddLeadInput = z.infer<typeof LeadSchema>;
 
-// --- CREATE ---
+// 2. Partial Schema for Updates
+const UpdateLeadSchema = LeadSchema.partial();
+
+// 3. Strict Interface for DB Updates (Fixes 'any' error)
+interface LeadUpdatePayload {
+  updated_at: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  source?: string;
+  budget_display?: string;
+  notes?: string;
+}
+
+// --- ACTIONS ---
+
+// 1. CREATE LEAD
 export async function addLead(rawLeadData: AddLeadInput) {
   try {
     const validation = LeadSchema.safeParse(rawLeadData);
-    if (!validation.success) return { error: validation.error.issues[0].message };
+    if (!validation.success) {
+      return { error: validation.error.issues[0].message };
+    }
 
     const leadData = validation.data;
     const supabase = await createClient()
 
-    // Auth & Org Check
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: "Unauthorized" }
 
@@ -57,7 +76,11 @@ export async function addLead(rawLeadData: AddLeadInput) {
       notes: leadData.notes || null,
     }
 
-    const { data, error } = await supabase.from('leads').insert(dbData).select().single()
+    const { data, error } = await supabase
+      .from('leads')
+      .insert(dbData)
+      .select()
+      .single()
 
     if (error) {
       console.error('Supabase Insert Error:', error);
@@ -90,11 +113,15 @@ export async function addLead(rawLeadData: AddLeadInput) {
   }
 }
 
-// --- READ ---
+// 2. GET LEADS
 export async function getLeads() {
   try {
     const supabase = await createClient()
-    const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
+    
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Get Leads Error:', error);
@@ -122,15 +149,55 @@ export async function getLeads() {
   }
 }
 
-// --- UPDATE (With Move Logic) ---
+// 3. UPDATE LEAD DETAILS
+export async function updateLead(leadId: string, rawData: Partial<AddLeadInput>) {
+  try {
+    const supabase = await createClient()
+
+    const validation = UpdateLeadSchema.safeParse(rawData);
+    if (!validation.success) {
+      return { error: validation.error.issues[0].message };
+    }
+    
+    const data = validation.data;
+
+    // Use strict interface instead of 'any'
+    const dbData: LeadUpdatePayload = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (data.name) dbData.name = data.name;
+    if (data.email) dbData.email = data.email;
+    if (data.phone) dbData.phone = data.phone;
+    if (data.source) dbData.source = data.source;
+    if (data.budget) dbData.budget_display = data.budget;
+    if (data.notes) dbData.notes = data.notes;
+
+    const { error } = await supabase
+      .from('leads')
+      .update(dbData)
+      .eq('id', leadId);
+
+    if (error) {
+      console.error('Update Lead Error:', error);
+      return { error: error.message };
+    }
+
+    revalidatePath('/dashboard/leads');
+    return { success: true };
+
+  } catch (error) {
+    console.error('Update Lead Exception:', error);
+    return { error: 'Failed to update lead details' };
+  }
+}
+
+// 4. UPDATE STAGE
 export async function updateLeadStage(leadId: string, newStage: string) {
   try {
     const supabase = await createClient()
 
-    // CASE 1: CONVERT TO CLIENT (Move Operation)
     if (newStage === 'Closed') {
-      
-      // 1. Fetch the Lead Data
       const { data: leadData, error: fetchError } = await supabase
         .from('leads')
         .select('*')
@@ -139,7 +206,6 @@ export async function updateLeadStage(leadId: string, newStage: string) {
 
       if (fetchError || !leadData) return { error: "Lead not found" }
 
-      // 2. Insert into Clients Table
       const clientData = {
         organization_id: leadData.organization_id,
         name: leadData.name,
@@ -161,7 +227,6 @@ export async function updateLeadStage(leadId: string, newStage: string) {
         return { error: "Failed to create client profile." }
       }
 
-      // 3. Delete from Leads Table
       const { error: deleteError } = await supabase.from('leads').delete().eq('id', leadId)
 
       if (deleteError) {
@@ -174,7 +239,6 @@ export async function updateLeadStage(leadId: string, newStage: string) {
       return { success: true }
     }
 
-    // CASE 2: NORMAL UPDATE
     const { error } = await supabase
       .from('leads')
       .update({ stage: newStage })
@@ -191,16 +255,21 @@ export async function updateLeadStage(leadId: string, newStage: string) {
   }
 }
 
-// --- DELETE ---
+// 5. DELETE LEAD
 export async function deleteLead(leadId: string) {
   try {
     const supabase = await createClient()
     const { error } = await supabase.from('leads').delete().eq('id', leadId)
-    if (error) return { error: error.message }
+    
+    if (error) {
+      console.error('Delete Lead Error:', error);
+      return { error: error.message }
+    }
+    
     revalidatePath('/dashboard/leads')
     return { success: true }
   } catch (error) {
-    console.error('Delete Lead Error:', error);
+    console.error('Delete Lead Unexpected Error:', error);
     return { error: 'Failed to delete lead' }
   }
 }

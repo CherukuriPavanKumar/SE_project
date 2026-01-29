@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, RefreshCcw } from "lucide-react";
+import { Plus, RefreshCcw, Loader2 } from "lucide-react";
 import type { Agent } from "@/lib/types";
 
 // Redux
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
-import { deleteAgent as deleteAgentAction } from "@/lib/redux/slices/agentSlice";
+import { 
+  deleteAgent as deleteAgentState, 
+  setAgents // Import for rollback 
+} from "@/lib/redux/slices/agentSlice";
+
+// Server Actions
+import { deleteAgent as deleteAgentServer } from "./actions";
+
+// Hook
+import { useAgentData } from "@/hooks/agents/use-agent-data";
 
 // Components
 import AgentStats from "./components/AgentStats";
@@ -18,7 +27,11 @@ import AgentDetailsModal from "./components/AgentDetailsModal";
 import toast from "react-hot-toast";
 
 export default function AgentsPage() {
+  // 1. Initialize Hook
+  const { refreshAgents } = useAgentData();
+
   const agents = useAppSelector((state) => state.agents.items);
+  const isLoading = useAppSelector((state) => state.agents.loading);
   const dispatch = useAppDispatch();
 
   // State
@@ -31,7 +44,7 @@ export default function AgentsPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
-  // ⚡ OPTIMIZATION: Memoized Filter Logic
+  // Memoized Filter Logic
   const filteredAgents = useMemo(() => {
     return agents.filter((agent) => {
       const query = searchQuery.toLowerCase();
@@ -53,10 +66,24 @@ export default function AgentsPage() {
     setShowDetailsModal(true);
   };
 
-  const handleDeleteAgent = (id: string) => {
-    if (confirm("Are you sure you want to remove this agent?")) {
-      dispatch(deleteAgentAction(id));
-      toast.success("Agent removed successfully");
+  // 2. Optimized Delete
+  const handleDeleteAgent = async (id: string) => {
+    if (!confirm("Are you sure you want to remove this agent?")) return;
+
+    const previousAgents = [...agents];
+
+    // Optimistic Update
+    dispatch(deleteAgentState(id));
+    toast.success("Agent removed successfully");
+    setShowDetailsModal(false);
+
+    try {
+      const result = await deleteAgentServer(id);
+      if (result.error) throw new Error(result.error);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete agent");
+      dispatch(setAgents(previousAgents));
     }
   };
 
@@ -64,6 +91,7 @@ export default function AgentsPage() {
     setSearchQuery("");
     setSelectedRole("All Roles");
     setSelectedStatus("All Status");
+    refreshAgents();
     toast.success("Filters reset");
   };
 
@@ -82,7 +110,7 @@ export default function AgentsPage() {
             onClick={handleResetFilters}
             className="flex items-center gap-2 px-3 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
           >
-            <RefreshCcw className="h-4 w-4" />
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
             Reset
           </button>
           <button
@@ -109,11 +137,17 @@ export default function AgentsPage() {
       />
 
       {/* List View */}
-      <AgentListView 
-        agents={filteredAgents} 
-        onViewDetails={handleViewDetails}
-        onDelete={handleDeleteAgent} 
-      />
+      {isLoading && agents.length === 0 ? (
+        <div className="w-full py-20 flex justify-center items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      ) : (
+        <AgentListView 
+            agents={filteredAgents} 
+            onViewDetails={handleViewDetails}
+            onDelete={handleDeleteAgent} 
+        />
+      )}
 
       {/* Modals */}
       {showDetailsModal && selectedAgent && (

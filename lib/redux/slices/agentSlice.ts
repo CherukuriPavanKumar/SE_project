@@ -1,6 +1,4 @@
-// lib/redux/slices/agentSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { mockAgents } from '@/lib/mock-data';
 import { type Agent } from '@/lib/types';
 import type { RootState } from '../store';
 
@@ -11,7 +9,7 @@ interface AgentState {
 }
 
 const initialState: AgentState = {
-  items: mockAgents,
+  items: [], // Initialize empty
   loading: false,
   error: null,
 };
@@ -20,6 +18,12 @@ const agentSlice = createSlice({
   name: 'agents',
   initialState,
   reducers: {
+    // NEW: Set from DB
+    setAgents: (state, action: PayloadAction<Agent[]>) => {
+      state.items = action.payload;
+      state.loading = false;
+      state.error = null;
+    },
     addAgent: (state, action: PayloadAction<Agent>) => {
       state.items.unshift(action.payload);
     },
@@ -41,11 +45,9 @@ const agentSlice = createSlice({
   },
 });
 
-export const { addAgent, updateAgent, deleteAgent, setLoading, setError } = agentSlice.actions;
+export const { setAgents, addAgent, updateAgent, deleteAgent, setLoading, setError } = agentSlice.actions;
 
 // Selectors
 export const selectAllAgents = (state: RootState) => state.agents.items;
-export const selectAgentsLoading = (state: RootState) => state.agents.loading;
-export const selectAgentsError = (state: RootState) => state.agents.error;
 
 export default agentSlice.reducer;

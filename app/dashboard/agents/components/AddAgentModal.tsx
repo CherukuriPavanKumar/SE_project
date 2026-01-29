@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { X, User, Mail, Phone, Briefcase, Loader2, MapPin, Award, CheckCircle } from "lucide-react";
-import type { Agent } from "@/lib/types";
+// import type { Agent } from "@/lib/types";
 import { agentDepartments, agentSpecializations } from "@/lib/constants";
 
-import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
+import { useAppDispatch } from "@/lib/redux/hooks";
 import { addAgent as addAgentAction } from "@/lib/redux/slices/agentSlice";
+
+// 1. Import Server Action
+import { addAgent as addAgentServer } from "../actions";
 
 import toast from "react-hot-toast";
 
@@ -18,7 +21,6 @@ type AgentStatus = "Active" | "Inactive";
 
 export default function AddAgentModal({ onClose }: AddAgentModalProps) {
   const dispatch = useAppDispatch();
-  const agents = useAppSelector((state) => state.agents.items);
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -42,31 +44,35 @@ export default function AddAgentModal({ onClose }: AddAgentModalProps) {
     }
 
     setIsLoading(true);
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
 
-    const newAgent: Agent = {
-      id: `AG${String(agents.length + 1).padStart(3, "0")}`,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      role: formData.role,
-      department: formData.department,
-      status: formData.status,
-      joinedDate: new Date().toISOString().split("T")[0],
-      totalLeads: 0,
-      totalDeals: 0,
-      totalRevenue: "₹0",
-      commission: "₹0",
-      specialization: formData.specialization,
-      address: formData.address || undefined,
-      licenseNumber: formData.role === "Broker" ? formData.licenseNumber : undefined,
-    };
+    try {
+      // 2. Call Server Action
+      const result = await addAgentServer({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+        department: formData.department,
+        status: formData.status,
+        specialization: formData.specialization,
+        licenseNumber: formData.licenseNumber,
+        address: formData.address
+      });
 
-    dispatch(addAgentAction(newAgent));
-    onClose();
-    setIsLoading(false);
-    toast.success("Agent added successfully!");
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.success && result.newAgent) {
+        // 3. Update Redux on Success
+        dispatch(addAgentAction(result.newAgent));
+        toast.success("Agent added successfully!");
+        onClose();
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const inputClass = "w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm";

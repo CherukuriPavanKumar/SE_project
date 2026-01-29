@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
+// 1. Validation Schema
 const ClientSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email").optional().or(z.literal('')),
@@ -18,10 +19,30 @@ const ClientSchema = z.object({
 
 type AddClientInput = z.infer<typeof ClientSchema>;
 
+// 2. Strict Interface for DB Updates
+interface ClientUpdatePayload {
+  updated_at: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  company?: string | null;
+  status?: "Active" | "Inactive" | "VIP";
+  notes?: string | null;
+  tags?: string[];
+  metadata?: {
+    legacy_preferred_agent_name?: string;
+    legacy_property_ids?: string[];
+    converted_from_lead_id?: string;
+  };
+}
+
+// --- CREATE ---
 export async function addClient(rawClientData: AddClientInput) {
   try {
     const validation = ClientSchema.safeParse(rawClientData);
-    if (!validation.success) return { error: validation.error.issues[0].message };
+    if (!validation.success) {
+      return { error: validation.error.issues[0].message };
+    }
 
     const clientData = validation.data;
     const supabase = await createClient()
@@ -37,7 +58,9 @@ export async function addClient(rawClientData: AddClientInput) {
 
     if (!profile?.organization_id) return { error: "Organization not found" }
 
-    const tagArray = clientData.tags ? clientData.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const tagArray = clientData.tags 
+      ? clientData.tags.split(',').map(t => t.trim()).filter(Boolean) 
+      : [];
 
     const dbData = {
       organization_id: profile.organization_id,
@@ -46,7 +69,6 @@ export async function addClient(rawClientData: AddClientInput) {
       phone: clientData.phone,
       company: clientData.company || null,
       status: clientData.status,
-      preferred_agent: null, // Storing agent name in metadata for now
       tags: tagArray,
       notes: clientData.notes || null,
       metadata: {
@@ -55,10 +77,14 @@ export async function addClient(rawClientData: AddClientInput) {
       }
     }
 
-    const { data, error } = await supabase.from('clients').insert(dbData).select().single()
+    const { data, error } = await supabase
+      .from('clients')
+      .insert(dbData)
+      .select()
+      .single()
 
     if (error) {
-      console.error('Insert Client Error:', error);
+      console.error('Supabase Insert Error:', error);
       return { error: error.message }
     }
 
@@ -73,8 +99,8 @@ export async function addClient(rawClientData: AddClientInput) {
         phone: data.phone,
         company: data.company || '',
         totalPurchases: 0,
-        totalValue: "₹0", 
-        propertiesOwned: [], 
+        totalValue: "₹0",
+        propertiesOwned: [],
         status: data.status,
         joinedDate: data.created_at,
         lastInteraction: data.created_at,
@@ -84,20 +110,21 @@ export async function addClient(rawClientData: AddClientInput) {
       }
     }
   } catch (error) {
-    console.error('Add Client Exception:', error);
+    console.error('Add Client Error:', error);
     return { error: 'An unexpected error occurred' }
   }
 }
 
+// --- READ ---
 export async function getClients() {
   try {
     const supabase = await createClient()
-    const { data, error } = await supabase.from('clients').select('*').order('created_at', { ascending: false })
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Get Clients Error:', error);
-      return []
-    }
+    if (error) return []
 
     return data.map(client => ({
       id: client.id,
@@ -107,7 +134,7 @@ export async function getClients() {
       company: client.company || '',
       totalPurchases: client.total_purchases || 0,
       totalValue: client.total_value_display || "₹0",
-      propertiesOwned: [], 
+      propertiesOwned: [],
       status: client.status,
       joinedDate: client.created_at,
       lastInteraction: client.last_interaction || client.created_at,
@@ -116,25 +143,73 @@ export async function getClients() {
       notes: client.notes || '',
     }))
   } catch (error) {
-    console.error('Get Clients Exception:', error);
+    console.error('Get Clients Error:', error);
     return []
   }
 }
 
+// --- UPDATE ---
+export async function updateClient(clientId: string, rawData: Partial<AddClientInput>) {
+  try {
+    const supabase = await createClient();
+
+    const validation = ClientSchema.partial().safeParse(rawData);
+    if (!validation.success) {
+      return { error: validation.error.issues[0].message };
+    }
+    
+    const data = validation.data;
+
+    const dbData: ClientUpdatePayload = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (data.name) dbData.name = data.name;
+    if (data.email) dbData.email = data.email;
+    if (data.phone) dbData.phone = data.phone;
+    if (data.company !== undefined) dbData.company = data.company || null;
+    if (data.status) dbData.status = data.status;
+    if (data.notes !== undefined) dbData.notes = data.notes || null;
+    
+    if (data.tags !== undefined) {
+      dbData.tags = data.tags.split(',').map(t => t.trim()).filter(Boolean);
+    }
+
+    if (data.preferredAgent) {
+      dbData.metadata = {
+        legacy_preferred_agent_name: data.preferredAgent
+      };
+    }
+
+    const { error } = await supabase
+      .from('clients')
+      .update(dbData)
+      .eq('id', clientId);
+
+    if (error) {
+      console.error('Update Client Error:', error);
+      return { error: error.message };
+    }
+
+    revalidatePath('/dashboard/clients');
+    return { success: true };
+
+  } catch (error) {
+    console.error('Update Client Exception:', error);
+    return { error: 'Failed to update client' };
+  }
+}
+
+// --- DELETE ---
 export async function deleteClient(clientId: string) {
   try {
     const supabase = await createClient()
     const { error } = await supabase.from('clients').delete().eq('id', clientId)
-    
-    if (error) {
-      console.error('Delete Client Error:', error);
-      return { error: error.message }
-    }
-
+    if (error) return { error: error.message }
     revalidatePath('/dashboard/clients')
     return { success: true }
   } catch (error) {
-    console.error('Delete Client Exception:', error);
+    console.error('Delete Client Error:', error);
     return { error: 'Failed to delete client' }
   }
 }
