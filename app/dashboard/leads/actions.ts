@@ -2,86 +2,69 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 
-// Define the shape of data coming from your Frontend Form
-interface AddLeadData {
-  name: string;
-  email: string;
-  phone: string;
-  source: string;
-  budget: string;
-  stage: string;
-  assignedTo: string;       
-  propertyInterest: string[]; 
-  nextFollowUp?: string;
-  notes: string;
-}
+// 1. Define Validation Schema (Security Blueprint)
+const LeadSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address").optional().or(z.literal('')),
+  phone: z.string().min(10, "Phone number is too short"),
+  source: z.string(),
+  budget: z.string(),
+  stage: z.string(),
+  assignedTo: z.string().optional(),
+  propertyInterest: z.array(z.string()).optional(),
+  nextFollowUp: z.string().optional().nullable(),
+  notes: z.string().optional(),
+})
 
-// 1. ADD LEAD (Securely to YOUR Organization)
-export async function addLead(leadData: AddLeadData) {
+// Define input type from schema
+type AddLeadInput = z.infer<typeof LeadSchema>;
+
+// --- CREATE ---
+export async function addLead(rawLeadData: AddLeadInput) {
   try {
+    // 2. Validate Input BEFORE touching DB
+    const validation = LeadSchema.safeParse(rawLeadData);
+    
+    if (!validation.success) {
+      // FIX: Use .issues instead of .errors to satisfy TypeScript
+      return { error: validation.error.issues[0].message };
+    }
+
+    const leadData = validation.data;
     const supabase = await createClient()
 
-    // A. Get Current User
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError) {
-      console.error('Auth error:', userError)
-      return { error: "Authentication failed: " + userError.message }
-    }
-    
-    if (!user) {
-      console.error('No user found')
-      return { error: "Unauthorized - Please log in again" }
-    }
+    // Auth & Org Check
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: "Unauthorized" }
 
-    console.log('User authenticated:', user.id)
-
-    // B. Find User's Organization ID with detailed error handling
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('organization_id')
       .eq('id', user.id)
       .single()
 
-    if (profileError) {
-      console.error('Profile fetch error:', profileError)
-      return { error: `Profile error: ${profileError.message}` }
-    }
+    if (!profile?.organization_id) return { error: "Organization not found" }
 
-    if (!profile?.organization_id) {
-      console.error('No organization found for user')
-      return { error: "Organization not found. Please contact support." }
-    }
-
-    console.log('Organization found:', profile.organization_id)
-
-    // C. Map Frontend Data -> Strict Database Schema
+    // 3. Prepare Data
     const dbData = {
       organization_id: profile.organization_id,
       name: leadData.name,
-      email: leadData.email || null, // Allow null for optional email
+      email: leadData.email || null,
       phone: leadData.phone,
       source: leadData.source,
       budget_display: leadData.budget,
       stage: leadData.stage,
-      
-      // Set to null and store in metadata
-      assigned_to: null, 
-      property_interest: null, 
-      
       metadata: {
         legacy_assigned_agent: leadData.assignedTo,
         legacy_property_interest: leadData.propertyInterest
       },
-
       next_follow_up: leadData.nextFollowUp || null,
       notes: leadData.notes || null,
     }
 
-    console.log('Attempting to insert:', JSON.stringify(dbData, null, 2))
-
-    // D. Insert into Supabase with detailed error logging
+    // 4. Insert
     const { data, error } = await supabase
       .from('leads')
       .insert(dbData)
@@ -89,37 +72,13 @@ export async function addLead(leadData: AddLeadData) {
       .single()
 
     if (error) {
-      console.error('Supabase Insert Error:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      })
-      
-      // Provide more helpful error messages
-      if (error.code === '23505') {
-        return { error: 'A lead with this information already exists' }
-      }
-      if (error.code === '23503') {
-        return { error: 'Invalid reference data. Please refresh and try again.' }
-      }
-      if (error.code === '42501') {
-        return { error: 'Permission denied. Please check your account permissions.' }
-      }
-      
+      console.error('Supabase Insert Error:', error);
       return { error: error.message }
     }
 
-    if (!data) {
-      console.error('No data returned from insert')
-      return { error: 'Failed to create lead - no data returned' }
-    }
-
-    console.log('Lead created successfully:', data.id)
-
     revalidatePath('/dashboard/leads')
-    
-    // E. Return Clean Data to Frontend
+
+    // Return sanitized data to Frontend
     return { 
       success: true, 
       newLead: {
@@ -139,69 +98,92 @@ export async function addLead(leadData: AddLeadData) {
       }
     }
   } catch (error) {
-    console.error('Unexpected error in addLead:', error)
+    // FIX: Log the error to satisfy 'defined but never used' linter rule
+    console.error('Add Lead Unexpected Error:', error);
     return { 
       error: error instanceof Error ? error.message : 'An unexpected error occurred' 
     }
   }
 }
 
-// 2. GET LEADS (Filtered by Organization automatically via RLS)
+// --- READ ---
 export async function getLeads() {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase
-    .from('leads')
-    .select('*')
-    .order('created_at', { ascending: false })
+  try {
+    const supabase = await createClient()
+    
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching leads:', error)
-    return []
+    if (error) {
+      console.error('Get Leads Supabase Error:', error);
+      return []
+    }
+
+    return data.map(lead => ({
+      id: lead.id,
+      name: lead.name,
+      email: lead.email || '',
+      phone: lead.phone,
+      source: lead.source,
+      budget: lead.budget_display || '',
+      stage: lead.stage,
+      propertyInterest: lead.metadata?.legacy_property_interest || [],
+      assignedTo: lead.metadata?.legacy_assigned_agent || "Unassigned",
+      nextFollowUp: lead.next_follow_up,
+      notes: lead.notes || '',
+      createdAt: lead.created_at,
+      lastContact: lead.created_at
+    }))
+  } catch (error) {
+    console.error('Get Leads Unexpected Error:', error);
+    return [];
   }
-
-  // Transform Database Columns -> Frontend Shape
-  return data.map(lead => ({
-    id: lead.id,
-    name: lead.name,
-    email: lead.email || '',
-    phone: lead.phone,
-    source: lead.source,
-    budget: lead.budget_display || '',
-    stage: lead.stage,
-    propertyInterest: lead.metadata?.legacy_property_interest || [],
-    assignedTo: lead.metadata?.legacy_assigned_agent || "Unassigned",
-    nextFollowUp: lead.next_follow_up,
-    notes: lead.notes || '',
-    createdAt: lead.created_at,
-    lastContact: lead.created_at
-  }))
 }
 
-// 3. UPDATE STAGE
+// --- UPDATE ---
 export async function updateLeadStage(leadId: string, newStage: string) {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const { error } = await supabase
-    .from('leads')
-    .update({ stage: newStage })
-    .eq('id', leadId)
+    const { error } = await supabase
+      .from('leads')
+      .update({ stage: newStage })
+      .eq('id', leadId)
 
-  if (error) return { error: error.message }
-  revalidatePath('/dashboard/leads')
-  return { success: true }
+    if (error) {
+      console.error('Update Stage Error:', error);
+      return { error: error.message }
+    }
+    
+    revalidatePath('/dashboard/leads')
+    return { success: true }
+  } catch (error) {
+    console.error('Update Stage Unexpected Error:', error);
+    return { error: 'Failed to update stage' }
+  }
 }
 
-// 4. DELETE LEAD
+// --- DELETE ---
 export async function deleteLead(leadId: string) {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const { error } = await supabase
-    .from('leads')
-    .delete()
-    .eq('id', leadId)
+    const { error } = await supabase
+      .from('leads')
+      .delete()
+      .eq('id', leadId)
 
-  if (error) return { error: error.message }
-  revalidatePath('/dashboard/leads')
-  return { success: true }
+    if (error) {
+      console.error('Delete Lead Error:', error);
+      return { error: error.message }
+    }
+    
+    revalidatePath('/dashboard/leads')
+    return { success: true }
+  } catch (error) {
+    console.error('Delete Lead Unexpected Error:', error);
+    return { error: 'Failed to delete lead' }
+  }
 }

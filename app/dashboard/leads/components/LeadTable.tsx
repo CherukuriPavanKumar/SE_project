@@ -19,6 +19,14 @@ interface LeadTableProps {
 }
 
 export default function LeadTable({ leads, onStageClick, onDelete, onViewDetails }: LeadTableProps) {
+  
+  // Helper to trigger the call
+  const handleCall = (phone: string) => {
+    toast.success(`Calling ${phone}...`);
+    // This tells the browser to open the default phone app
+    window.location.href = `tel:${phone}`;
+  };
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -51,7 +59,7 @@ export default function LeadTable({ leads, onStageClick, onDelete, onViewDetails
                     className="hover:bg-gray-50 transition-colors group cursor-pointer"
                     onClick={() => onViewDetails && onViewDetails(lead)}
                 >
-                  {/* Lead Name & Avatar */}
+                  {/* ... [Other columns remain exactly the same] ... */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-9 w-9 flex-shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
@@ -64,15 +72,20 @@ export default function LeadTable({ leads, onStageClick, onDelete, onViewDetails
                     </div>
                   </td>
 
-                  {/* Contact Info */}
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-gray-900 font-medium">{lead.phone}</span>
+                      {/* Clicking the phone number text will also trigger a call now */}
+                      <a 
+                        href={`tel:${lead.phone}`}
+                        onClick={(e) => e.stopPropagation()} 
+                        className="text-gray-900 font-medium hover:text-blue-600 hover:underline transition-colors"
+                      >
+                        {lead.phone}
+                      </a>
                       <span className="text-gray-500 text-xs truncate max-w-[150px]" title={lead.email}>{lead.email}</span>
                     </div>
                   </td>
 
-                  {/* Interest / Budget */}
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
                       {lead.propertyInterest && lead.propertyInterest.length > 0 ? (
@@ -91,14 +104,12 @@ export default function LeadTable({ leads, onStageClick, onDelete, onViewDetails
                     </div>
                   </td>
 
-                  {/* Source */}
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
                       {lead.source}
                     </span>
                   </td>
 
-                  {/* Stage Badge */}
                   <td className="px-6 py-4">
                     <button
                       onClick={(e) => { e.stopPropagation(); onStageClick(lead); }}
@@ -110,7 +121,6 @@ export default function LeadTable({ leads, onStageClick, onDelete, onViewDetails
                     </button>
                   </td>
 
-                  {/* Agent */}
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {lead.assignedTo ? (
                       <span className="flex items-center gap-2">
@@ -125,13 +135,16 @@ export default function LeadTable({ leads, onStageClick, onDelete, onViewDetails
                   {/* Actions */}
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2 opacity-100" onClick={(e) => e.stopPropagation()}>
+                      
+                      {/* --- UPDATED PHONE BUTTON --- */}
                       <button
-                        onClick={() => toast.success(`Calling ${lead.phone}...`)}
+                        onClick={() => handleCall(lead.phone)}
                         className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-100"
                         title="Call"
                       >
                         <Phone className="h-4 w-4" />
                       </button>
+                      
                       <button
                         onClick={() => onViewDetails && onViewDetails(lead)}
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
