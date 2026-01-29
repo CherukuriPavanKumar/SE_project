@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, LayoutGrid, List, RefreshCcw } from "lucide-react";
+import { Plus, LayoutGrid, List, RefreshCcw, Loader2 } from "lucide-react";
 import type { Client } from "@/lib/types";
 
 // Redux imports
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
-import { deleteClient as deleteClientAction } from "@/lib/redux/slices/clientSlice";
+import { 
+  deleteClient as deleteClientState,
+  setClients 
+} from "@/lib/redux/slices/clientSlice";
+
+// Server Actions
+import { deleteClient as deleteClientServer } from "./actions";
+
+// Hook
+import { useClientData } from "@/hooks/clients/use-client-data";
 
 // Component imports
 import ClientStats from "./components/ClientStats";
@@ -19,7 +28,11 @@ import AddClientModal from "./components/AddClientModal";
 import toast from "react-hot-toast";
 
 export default function ClientsPage() {
+  // 1. Initialize Hook
+  const { refreshClients } = useClientData();
+
   const clients = useAppSelector((state) => state.clients.items);
+  const isLoading = useAppSelector((state) => state.clients.loading);
   const agents = useAppSelector((state) => state.agents.items);
   const dispatch = useAppDispatch();
 
@@ -34,7 +47,7 @@ export default function ClientsPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
-  // ⚡ OPTIMIZATION: Memoized Filter Logic
+  // Memoized Filter Logic
   const filteredClients = useMemo(() => {
     return clients.filter((client) => {
       const query = searchQuery.toLowerCase();
@@ -63,10 +76,26 @@ export default function ClientsPage() {
     setShowDetailsModal(true);
   };
 
-  const handleDeleteClient = (id: string) => {
-    if (confirm("Are you sure you want to permanently delete this client?")) {
-      dispatch(deleteClientAction(id));
-      toast.success("Client deleted successfully!");
+  // 2. Optimized Delete Handler
+  const handleDeleteClient = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this client?")) return;
+
+    // Snapshot
+    const previousClients = [...clients];
+
+    // Optimistic Update
+    dispatch(deleteClientState(id));
+    toast.success("Client deleted successfully!");
+
+    try {
+      // Server Action
+      const result = await deleteClientServer(id);
+      if (result.error) throw new Error(result.error);
+    } catch (error) {
+      // Rollback
+      console.error(error);
+      toast.error("Failed to delete client");
+      dispatch(setClients(previousClients));
     }
   };
 
@@ -74,6 +103,7 @@ export default function ClientsPage() {
     setSearchQuery("");
     setSelectedStatus("All Status");
     setSelectedAgentRole("All Roles");
+    refreshClients(); // Manual refresh
     toast.success("Filters reset");
   };
 
@@ -114,7 +144,7 @@ export default function ClientsPage() {
             onClick={handleResetFilters}
             className="flex items-center gap-2 px-3 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
           >
-            <RefreshCcw className="h-4 w-4" />
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
             Reset
           </button>
           <button
@@ -141,7 +171,11 @@ export default function ClientsPage() {
       />
 
       {/* Content View */}
-      {viewMode === "list" ? (
+      {isLoading && clients.length === 0 ? (
+        <div className="w-full py-20 flex justify-center items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      ) : viewMode === "list" ? (
         <ClientListView
           clients={filteredClients}
           onViewDetails={handleViewDetails}

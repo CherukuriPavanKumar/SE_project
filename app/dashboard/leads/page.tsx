@@ -113,7 +113,7 @@ export default function LeadsPage() {
     }
   };
 
-  // --- HANDLER: STAGE CHANGE (Optimistic) ---
+  // --- HANDLER: STAGE CHANGE (Optimistic with Move Logic) ---
   const handleStageChange = useCallback(async (lead: Lead, newStage: string) => {
     // Close modals immediately for better UX
     setShowStageModal(false);
@@ -122,16 +122,20 @@ export default function LeadsPage() {
     // 1. Snapshot previous state
     const previousLeads = [...leads];
     
-    // 2. Optimistic Update
-    dispatch(updateLeadState({ id: lead.id, data: { stage: newStage } }));
-    
-    // Custom toast messages based on stage
+    // 2. OPTIMISTIC UPDATE
     if (newStage === "Closed") {
-      toast.success(`${lead.name} converted to Client! 🎉`, { id: "stage-update" });
-    } else if (newStage === "Discarded") {
-      toast.success("Lead marked as discarded", { id: "stage-update" });
+      // If closing, REMOVE it from the list immediately (it moves to Clients)
+      dispatch(deleteLeadState(lead.id)); 
+      toast.success(`${lead.name} moved to Clients! 🎉`, { id: "stage-update" });
     } else {
-      toast.success(`Moved to ${newStage}`, { id: "stage-update" });
+      // Normal update for other stages
+      dispatch(updateLeadState({ id: lead.id, data: { stage: newStage } }));
+      
+      if (newStage === "Discarded") {
+        toast.success("Lead marked as discarded", { id: "stage-update" });
+      } else {
+        toast.success(`Moved to ${newStage}`, { id: "stage-update" });
+      }
     }
 
     try {

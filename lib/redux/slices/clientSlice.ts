@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { mockClients } from '@/lib/mock-data';
 import { type Client } from '@/lib/types';
 
 interface ClientState {
@@ -9,7 +8,7 @@ interface ClientState {
 }
 
 const initialState: ClientState = {
-  items: mockClients,
+  items: [], // Start empty, remove mock data if present
   loading: false,
   error: null,
 };
@@ -18,6 +17,12 @@ const clientSlice = createSlice({
   name: 'clients',
   initialState,
   reducers: {
+    // NEW: Set all clients (from DB)
+    setClients: (state, action: PayloadAction<Client[]>) => {
+      state.items = action.payload;
+      state.loading = false;
+      state.error = null;
+    },
     addClient: (state, action: PayloadAction<Client>) => {
       state.items.unshift(action.payload);
     },
@@ -30,8 +35,15 @@ const clientSlice = createSlice({
     deleteClient: (state, action: PayloadAction<string>) => {
       state.items = state.items.filter(client => client.id !== action.payload);
     },
+    // NEW: Loading states
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
   },
 });
 
-export const { addClient, updateClient, deleteClient } = clientSlice.actions;
+export const { setClients, addClient, updateClient, deleteClient, setLoading, setError } = clientSlice.actions;
 export default clientSlice.reducer;

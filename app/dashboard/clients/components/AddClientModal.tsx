@@ -7,6 +7,9 @@ import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
 import { addClient as addClientAction } from "@/lib/redux/slices/clientSlice";
 import { addProperty as addPropertyAction } from "@/lib/redux/slices/propertySlice";
 
+// 1. Import Server Action
+import { addClient as addClientServer } from "../actions";
+
 import toast from "react-hot-toast";
 
 interface AddClientModalProps {
@@ -69,6 +72,7 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
       return;
     }
 
+    // Note: This only adds to Redux for now. In a real app, you'd want a separate server action for properties too.
     const newProperty: Property = {
       id: `P${String(properties.length + 1).padStart(3, "0")}`,
       title: newPropertyData.title,
@@ -106,31 +110,48 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
     }
 
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 800));
 
-    const selectedProps = properties.filter((p) => selectedPropertyIds.includes(p.id));
-    
-    const newClient: Client = {
-      id: `C${String(Date.now()).slice(-3)}`,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      company: formData.company || "",
-      totalPurchases: selectedPropertyIds.length,
-      totalValue: calculateTotalValue(),
-      propertiesOwned: selectedProps.map((p) => p.title),
-      status: formData.status,
-      joinedDate: new Date().toISOString().split("T")[0],
-      lastInteraction: new Date().toISOString().split("T")[0],
-      preferredAgent: formData.preferredAgent,
-      tags: formData.tags.split(",").map(t => t.trim()).filter(Boolean),
-      notes: formData.notes,
-    };
+    try {
+      // 2. Prepare Payload for Server Action
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company,
+        status: formData.status,
+        preferredAgent: formData.preferredAgent,
+        tags: formData.tags,
+        notes: formData.notes,
+        propertyIds: selectedPropertyIds // Pass selected IDs to be stored in metadata
+      };
 
-    dispatch(addClientAction(newClient));
-    onClose();
-    setIsLoading(false);
-    toast.success("Client added successfully!");
+      // 3. Call Server Action
+      const result = await addClientServer(payload);
+
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.success && result.newClient) {
+        
+        // 4. Update Redux with the new client returned from DB
+        // We manually inject the calculated values for the UI since they aren't fully in DB yet
+        const clientForUI: Client = {
+          ...result.newClient,
+          totalPurchases: selectedPropertyIds.length,
+          totalValue: calculateTotalValue(),
+          propertiesOwned: properties.filter(p => selectedPropertyIds.includes(p.id)).map(p => p.title)
+        };
+
+        dispatch(addClientAction(clientForUI));
+        
+        toast.success("Client added successfully!");
+        onClose();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Shared classes
