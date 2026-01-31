@@ -1,14 +1,15 @@
 import { useState, useMemo } from "react";
 import { X, Plus, Building2, DollarSign, User, Loader2, MapPin, Check, Phone, Mail } from "lucide-react";
-import type { Client, Property } from "@/lib/types";
+import type { Client } from "@/lib/types";
 import { clientStatuses } from "@/lib/constants";
 
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
 import { addClient as addClientAction } from "@/lib/redux/slices/clientSlice";
 import { addProperty as addPropertyAction } from "@/lib/redux/slices/propertySlice";
 
-// 1. Import Server Action
+// Server Actions
 import { addClient as addClientServer } from "../actions";
+import { addProperty as addPropertyServer } from "@/app/dashboard/properties/actions";
 
 import toast from "react-hot-toast";
 
@@ -24,6 +25,8 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
   const properties = useAppSelector((state) => state.properties.items);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isPropertyLoading, setIsPropertyLoading] = useState(false); // Specific loading state for property
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -53,11 +56,15 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
 
   const activeAgents = useMemo(() => agents.filter((a) => a.status === "Active"), [agents]);
   
-  const availableProperties = useMemo(() => properties.filter((p) => ["Available", "Sold"].includes(p.status)), [properties]);
+  // Show available properties + any newly created ones that might be selected
+  const availableProperties = useMemo(() => 
+    properties.filter((p) => ["Available", "Sold"].includes(p.status)), 
+  [properties]);
 
   const calculateTotalValue = () => {
     const selected = properties.filter((p) => selectedPropertyIds.includes(p.id));
     const total = selected.reduce((sum, prop) => {
+      // Basic cleaning for display calculation
       const val = parseFloat(prop.price.replace(/[₹,LakhsCr\s]/g, "") || "0");
       return sum + (prop.price.includes("Cr") ? val * 100 : val); 
     }, 0);
@@ -66,40 +73,54 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
     return `₹${total.toFixed(2)} L`;
   };
 
-  const handleAddNewProperty = () => {
+  const handleAddNewProperty = async () => {
     if (!newPropertyData.title || !newPropertyData.location || !newPropertyData.price) {
       toast.error("Please fill all required property fields");
       return;
     }
 
-    // Note: This only adds to Redux for now. In a real app, you'd want a separate server action for properties too.
-    const newProperty: Property = {
-      id: `P${String(properties.length + 1).padStart(3, "0")}`,
-      title: newPropertyData.title,
-      location: newPropertyData.location,
-      price: newPropertyData.price,
-      type: newPropertyData.type,
-      status: newPropertyData.status as "Available" | "Sold" | "Under Negotiation",
-      bedrooms: parseInt(newPropertyData.bedrooms),
-      bathrooms: parseInt(newPropertyData.bathrooms),
-      area: newPropertyData.area,
-      image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
-      description: newPropertyData.description,
-      listedBy: newPropertyData.listedBy,
-      listedDate: new Date().toISOString().split("T")[0],
-    };
+    setIsPropertyLoading(true);
 
-    dispatch(addPropertyAction(newProperty));
-    setSelectedPropertyIds([...selectedPropertyIds, newProperty.id]);
-    
-    setNewPropertyData({
-      title: "", location: "", price: "", type: "Apartment", status: "Available",
-      bedrooms: "2", bathrooms: "2", area: "", description: "",
-      listedBy: agents.find((a) => a.status === "Active")?.name || "",
-    });
-    
-    setShowAddProperty(false);
-    toast.success("Property added and selected!");
+    try {
+      // 1. Create Property in DB
+      const result = await addPropertyServer({
+        title: newPropertyData.title,
+        location: newPropertyData.location,
+        price: newPropertyData.price,
+        type: newPropertyData.type,
+        status: "Available", // Default to Available, will link when Client is saved
+        bedrooms: parseInt(newPropertyData.bedrooms),
+        bathrooms: parseInt(newPropertyData.bathrooms),
+        area: newPropertyData.area || "N/A",
+        description: "",
+        listedBy: newPropertyData.listedBy,
+      });
+
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.success && result.newProperty) {
+        // 2. Add to Redux (so it appears in the list below immediately)
+        dispatch(addPropertyAction(result.newProperty));
+        
+        // 3. Auto-select the new property
+        setSelectedPropertyIds((prev) => [...prev, result.newProperty!.id]);
+        
+        // 4. Reset form
+        setNewPropertyData({
+          title: "", location: "", price: "", type: "Apartment", status: "Available",
+          bedrooms: "2", bathrooms: "2", area: "", description: "",
+          listedBy: agents.find((a) => a.status === "Active")?.name || "",
+        });
+        
+        setShowAddProperty(false);
+        toast.success("Property created and selected!");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create property");
+    } finally {
+      setIsPropertyLoading(false);
+    }
   };
 
   const handleAddClient = async (e: React.FormEvent) => {
@@ -112,7 +133,7 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
     setIsLoading(true);
 
     try {
-      // 2. Prepare Payload for Server Action
+      // 2. Prepare Payload
       const payload = {
         name: formData.name,
         email: formData.email,
@@ -122,7 +143,7 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
         preferredAgent: formData.preferredAgent,
         tags: formData.tags,
         notes: formData.notes,
-        propertyIds: selectedPropertyIds // Pass selected IDs to be stored in metadata
+        propertyIds: selectedPropertyIds // Pass selected IDs
       };
 
       // 3. Call Server Action
@@ -132,8 +153,8 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
         toast.error(result.error);
       } else if (result.success && result.newClient) {
         
-        // 4. Update Redux with the new client returned from DB
-        // We manually inject the calculated values for the UI since they aren't fully in DB yet
+        // 4. Update Redux with the new client
+        // Inject calculated UI values
         const clientForUI: Client = {
           ...result.newClient,
           totalPurchases: selectedPropertyIds.length,
@@ -154,7 +175,6 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
     }
   };
 
-  // Shared classes
   const inputClass = "w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm";
   const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-600 transition-colors";
 
@@ -249,42 +269,53 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
                 <button 
                   type="button" 
                   onClick={() => setShowAddProperty(!showAddProperty)}
-                  className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                  className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded-md"
                 >
-                  <Plus className="h-3 w-3" /> {showAddProperty ? "Cancel" : "Add Property"}
+                  <Plus className="h-3 w-3" /> {showAddProperty ? "Cancel Adding" : "Create New Property"}
                 </button>
               </div>
               
+              {/* Quick Add Property Form */}
               {showAddProperty && (
-                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 mb-4 animate-fade-in">
-                  <h5 className="text-sm font-semibold text-blue-900 mb-3">Quick Add Property</h5>
+                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <h5 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+                    <Building2 className="h-4 w-4" /> Property Details
+                  </h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input type="text" value={newPropertyData.title} onChange={e => setNewPropertyData({...newPropertyData, title: e.target.value})} className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Title *" />
+                    <input type="text" value={newPropertyData.title} onChange={e => setNewPropertyData({...newPropertyData, title: e.target.value})} className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Property Title *" />
                     <input type="text" value={newPropertyData.location} onChange={e => setNewPropertyData({...newPropertyData, location: e.target.value})} className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Location *" />
-                    <input type="text" value={newPropertyData.price} onChange={e => setNewPropertyData({...newPropertyData, price: e.target.value})} className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Price *" />
-                    <button type="button" onClick={handleAddNewProperty} className="bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 px-4">Save</button>
+                    <input type="text" value={newPropertyData.price} onChange={e => setNewPropertyData({...newPropertyData, price: e.target.value})} className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Price (e.g. 1.5 Cr) *" />
+                    <button 
+                        type="button" 
+                        onClick={handleAddNewProperty} 
+                        disabled={isPropertyLoading}
+                        className="bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 px-4 flex items-center justify-center gap-2"
+                    >
+                        {isPropertyLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : "Save & Select"}
+                    </button>
                   </div>
                 </div>
               )}
 
+              {/* Property Selection List */}
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 max-h-48 overflow-y-auto space-y-2">
                 {availableProperties.length === 0 ? (
                   <p className="text-sm text-gray-500 text-center py-4">No available properties found.</p>
                 ) : (
                   availableProperties.map(prop => (
-                    <label key={prop.id} className="flex items-center gap-3 p-2 bg-white border border-gray-100 rounded-lg hover:border-blue-300 cursor-pointer transition-colors shadow-sm">
+                    <label key={prop.id} className={`flex items-center gap-3 p-2 border rounded-lg cursor-pointer transition-all shadow-sm ${selectedPropertyIds.includes(prop.id) ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100 hover:border-blue-300'}`}>
                       <div className="relative flex items-center justify-center w-5 h-5">
                         <input 
                           type="checkbox" 
                           checked={selectedPropertyIds.includes(prop.id)} 
                           onChange={() => setSelectedPropertyIds(prev => prev.includes(prop.id) ? prev.filter(id => id !== prop.id) : [...prev, prop.id])}
-                          className="peer appearance-none w-5 h-5 border border-gray-300 rounded checked:bg-blue-600 checked:border-blue-600 focus:ring-2 focus:ring-blue-500/20" 
+                          className="peer appearance-none w-5 h-5 border border-gray-300 rounded checked:bg-green-600 checked:border-green-600 focus:ring-2 focus:ring-green-500/20" 
                         />
                         <Check className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{prop.title}</p>
+                        <p className={`text-sm font-medium truncate ${selectedPropertyIds.includes(prop.id) ? 'text-green-900' : 'text-gray-900'}`}>{prop.title}</p>
                         <p className="text-xs text-gray-500 truncate">{prop.location}</p>
                       </div>
                       <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100">{prop.price}</span>
@@ -294,7 +325,7 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
               </div>
               
               {selectedPropertyIds.length > 0 && (
-                <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-100 text-sm shadow-sm">
+                <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-100 text-sm shadow-sm animate-in fade-in">
                   <span className="text-green-800 font-medium">Selected: {selectedPropertyIds.length} Properties</span>
                   <span className="text-green-800 font-bold flex items-center gap-1"><DollarSign className="h-4 w-4"/> {calculateTotalValue()}</span>
                 </div>

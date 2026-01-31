@@ -1,48 +1,58 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Plus, RefreshCcw } from "lucide-react";
+import { Plus, RefreshCcw, Loader2 } from "lucide-react";
 import type { Property, Lead } from "@/lib/types";
+import toast from "react-hot-toast";
 
-// Redux imports
+// Redux
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
-import { deleteProperty as deletePropertyAction } from "@/lib/redux/slices/propertySlice";
-// Import lead actions for the LeadDetailsModal
+import { 
+  deleteProperty as deletePropertyState, 
+  setProperties 
+} from "@/lib/redux/slices/propertySlice";
 import { updateLead as updateLeadAction, deleteLead as deleteLeadAction } from "@/lib/redux/slices/leadSlice";
 import { addClient as addClientAction } from "@/lib/redux/slices/clientSlice";
 
-// Component imports
+// Server Actions
+import { deleteProperty as deletePropertyServer } from "./actions";
+
+// Hooks
+import { usePropertyData } from "@/hooks/properties/use-property-data";
+
+// Components
 import PropertyStats from "./components/PropertyStats";
 import PropertyFilters from "./components/PropertyFilters";
 import PropertyGrid from "./components/PropertyGrid";
 import PropertyDetailsModal from "./components/PropertyDetailsModal";
 import AddPropertyModal from "./components/AddPropertyModal";
-// Reuse Lead Details Modal
 import LeadDetailsModal from "../leads/components/LeadDetailsModal";
 
-import toast from "react-hot-toast";
-
 export default function PropertiesPage() {
+  // 1. Initialize Data
+  const { refreshProperties } = usePropertyData();
+
+  // 2. Selectors
   const properties = useAppSelector((state) => state.properties.items);
+  const isLoading = useAppSelector((state) => state.properties.loading);
   const leads = useAppSelector((state) => state.leads.items);
   const agents = useAppSelector((state) => state.agents.items);
   const dispatch = useAppDispatch();
 
-  // Filter States
+  // 3. Local State
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All Types");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
   const [selectedAgentRole, setSelectedAgentRole] = useState("All Agents");
 
-  // Modal States
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
-  const [showLeadDetails, setShowLeadDetails] = useState(false); 
+  const [showLeadDetails, setShowLeadDetails] = useState(false);
   
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
-  // Memoized Filter Logic
+  // 4. Filter Logic
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
       const query = searchQuery.toLowerCase();
@@ -64,41 +74,49 @@ export default function PropertiesPage() {
     });
   }, [properties, searchQuery, selectedType, selectedStatus, selectedAgentRole, agents]);
 
+  // 5. Handlers
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedType("All Types");
     setSelectedStatus("All Status");
     setSelectedAgentRole("All Agents");
+    refreshProperties();
     toast.success("Filters reset");
   };
 
-  // Property Handlers
   const handleViewProperty = (property: Property) => {
     setSelectedProperty(property);
     setShowPropertyDetails(true);
   };
 
-  // NEW: Handler for clicking a property inside the Lead Modal
   const handleViewPropertyByName = (propertyName: string) => {
     const property = properties.find(p => p.title === propertyName);
     if (property) {
       setSelectedProperty(property);
       setShowPropertyDetails(true);
-      // Optional: Close lead modal if you want to switch context completely
-      // setShowLeadDetails(false); 
     } else {
       toast.error("Property not found");
     }
   };
 
-  const handleDeleteProperty = (id: string) => {
-    if (confirm("Are you sure you want to permanently delete this property?")) {
-      dispatch(deletePropertyAction(id));
-      toast.success("Property deleted successfully");
+  const handleDeleteProperty = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this property?")) return;
+
+    // Optimistic Update
+    const previousProps = [...properties];
+    dispatch(deletePropertyState(id));
+    toast.success("Property deleted successfully");
+
+    try {
+      const result = await deletePropertyServer(id);
+      if (result.error) throw new Error(result.error);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete property");
+      dispatch(setProperties(previousProps)); // Rollback
     }
   };
 
-  // Lead Handlers
   const handleViewLead = (lead: Lead) => {
     setSelectedLead(lead);
     setShowLeadDetails(true);
@@ -157,7 +175,7 @@ export default function PropertiesPage() {
             onClick={handleResetFilters}
             className="flex items-center gap-2 px-3 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
           >
-            <RefreshCcw className="h-4 w-4" />
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
             Reset Filters
           </button>
           <button
@@ -175,25 +193,25 @@ export default function PropertiesPage() {
 
       {/* Filters */}
       <PropertyFilters
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedType={selectedType}
-        setSelectedType={setSelectedType}
-        selectedStatus={selectedStatus}
-        setSelectedStatus={setSelectedStatus}
-        selectedAgentRole={selectedAgentRole}
-        setSelectedAgentRole={setSelectedAgentRole}
+        searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+        selectedType={selectedType} setSelectedType={setSelectedType}
+        selectedStatus={selectedStatus} setSelectedStatus={setSelectedStatus}
+        selectedAgentRole={selectedAgentRole} setSelectedAgentRole={setSelectedAgentRole}
       />
 
       {/* Grid */}
-      <PropertyGrid
-        properties={filteredProperties}
-        allLeads={leads}
-        onViewDetails={handleViewProperty}
-        onDelete={handleDeleteProperty}
-      />
+      {isLoading && properties.length === 0 ? (
+        <div className="w-full py-20 flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin text-blue-600" /></div>
+      ) : (
+        <PropertyGrid
+            properties={filteredProperties}
+            allLeads={leads}
+            onViewDetails={handleViewProperty}
+            onDelete={handleDeleteProperty}
+        />
+      )}
 
-      {/* Property Details Modal */}
+      {/* Modals */}
       {showPropertyDetails && selectedProperty && (
         <PropertyDetailsModal
           property={selectedProperty}
@@ -203,14 +221,13 @@ export default function PropertiesPage() {
         />
       )}
 
-      {/* Lead Details Modal (Stacked on top) */}
       {showLeadDetails && selectedLead && (
         <LeadDetailsModal
           lead={selectedLead}
           onClose={() => setShowLeadDetails(false)}
           onStageChange={handleLeadStageChange}
           onDelete={() => handleDeleteLead(selectedLead.id)}
-          onViewProperty={handleViewPropertyByName} // Fixed: Passed the handler here
+          onViewProperty={handleViewPropertyByName}
         />
       )}
 

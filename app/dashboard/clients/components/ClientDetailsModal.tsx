@@ -4,11 +4,9 @@ import type { Client } from "@/lib/types";
 import { clientStatuses } from "@/lib/constants";
 import toast from "react-hot-toast";
 
-// Redux
+// Redux & Actions
 import { useAppDispatch } from "@/lib/redux/hooks";
 import { updateClient as updateClientState } from "@/lib/redux/slices/clientSlice";
-
-// Action
 import { updateClient as updateClientServer } from "../actions";
 
 interface ClientDetailsModalProps {
@@ -21,11 +19,11 @@ type ClientStatus = "Active" | "Inactive" | "VIP";
 export default function ClientDetailsModal({ client, onClose }: ClientDetailsModalProps) {
   const dispatch = useAppDispatch();
   
-  // Edit State
+  // State
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Form State
+  // Form Data
   const [formData, setFormData] = useState({
     name: client.name,
     email: client.email,
@@ -65,15 +63,17 @@ export default function ClientDetailsModal({ client, onClose }: ClientDetailsMod
 
       toast.success("Client updated successfully");
       setIsEditing(false);
-    } catch (err) {
+    } catch (error) {
+      console.error(error); // Fix: Log error to use the variable
       toast.error("Failed to save changes");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const editInputClass = "w-full px-2.5 py-1.5 text-sm border border-blue-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-blue-50/30 transition-all";
-  const editSelectClass = "w-full px-2.5 py-1.5 text-sm border border-blue-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-blue-50/30 cursor-pointer transition-all";
+  // Edit Styles
+  const editInputClass = "w-full px-2 py-1 text-sm border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-blue-50/30";
+  const editSelectClass = "w-full px-2 py-1 text-sm border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-blue-50/30 cursor-pointer";
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -92,32 +92,18 @@ export default function ClientDetailsModal({ client, onClose }: ClientDetailsMod
                 {isEditing ? (
                   <div className="grid grid-cols-2 gap-3 pr-8">
                     <div className="col-span-2">
-                      <label className="text-[10px] text-gray-400 font-bold uppercase mb-1 block">Full Name</label>
-                      <input 
-                        type="text" 
-                        value={formData.name} 
-                        onChange={(e) => setFormData({...formData, name: e.target.value})} 
-                        className={`${editInputClass} text-lg font-bold text-gray-900`}
-                      />
+                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Full Name</label>
+                        <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className={`${editInputClass} text-lg font-bold`} />
                     </div>
                     <div>
-                      <label className="text-[10px] text-gray-400 font-bold uppercase mb-1 block">Status</label>
-                      <select 
-                        value={formData.status} 
-                        onChange={(e) => setFormData({...formData, status: e.target.value as ClientStatus})} 
-                        className={editSelectClass}
-                      >
-                        {clientStatuses.filter(s => s !== "All Status").map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
+                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Status</label>
+                        <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value as ClientStatus})} className={editSelectClass}>
+                            {clientStatuses.filter(s => s !== "All Status").map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
                     </div>
                     <div>
-                      <label className="text-[10px] text-gray-400 font-bold uppercase mb-1 block">Company</label>
-                      <input 
-                        type="text" 
-                        value={formData.company} 
-                        onChange={(e) => setFormData({...formData, company: e.target.value})} 
-                        className={editInputClass}
-                      />
+                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Company</label>
+                        <input type="text" value={formData.company || ""} onChange={(e) => setFormData({...formData, company: e.target.value})} className={editInputClass} />
                     </div>
                   </div>
                 ) : (
@@ -133,72 +119,51 @@ export default function ClientDetailsModal({ client, onClose }: ClientDetailsMod
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {!isEditing && (
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"
-                  title="Edit Client"
-                >
-                  <Edit2 className="h-5 w-5" />
+            
+            <div className="flex items-center gap-2 shrink-0">
+                {!isEditing && (
+                    <button onClick={() => setIsEditing(true)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all" title="Edit">
+                        <Edit2 className="h-5 w-5" />
+                    </button>
+                )}
+                <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all">
+                    <X className="h-6 w-6" />
                 </button>
-              )}
-              <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all">
-                <X className="h-6 w-6" />
-              </button>
             </div>
           </div>
 
           <div className="px-8 py-8 bg-gray-50/30 space-y-8">
             
-            {/* Top Stats - 3 Columns */}
+            {/* Top Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm flex items-center gap-4 transition-shadow hover:shadow-md">
                 <div className="p-3 bg-green-50 rounded-lg text-green-600"><CreditCard className="h-5 w-5" /></div>
-                <div>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Total Value</p>
-                  <p className="text-lg font-bold text-gray-900">{client.totalValue}</p>
-                </div>
+                <div><p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Total Value</p><p className="text-lg font-bold text-gray-900">{client.totalValue}</p></div>
               </div>
               <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm flex items-center gap-4 transition-shadow hover:shadow-md">
                 <div className="p-3 bg-blue-50 rounded-lg text-blue-600"><Building2 className="h-5 w-5" /></div>
-                <div>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Properties</p>
-                  <p className="text-lg font-bold text-gray-900">{client.totalPurchases}</p>
-                </div>
+                <div><p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Properties</p><p className="text-lg font-bold text-gray-900">{client.totalPurchases}</p></div>
               </div>
               <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm flex items-center gap-4 transition-shadow hover:shadow-md">
                 <div className="p-3 bg-purple-50 rounded-lg text-purple-600"><User className="h-5 w-5" /></div>
-                <div>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Agent</p>
-                  <p className="text-sm font-bold text-gray-900 truncate max-w-[120px]">{client.preferredAgent}</p>
-                </div>
+                <div><p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Agent</p><p className="text-sm font-bold text-gray-900 truncate max-w-[120px]">{client.preferredAgent}</p></div>
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
+              
+              {/* Left Column */}
               <div className="space-y-6">
-                {/* Contact Info */}
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-5 flex items-center gap-2">
-                    <User className="h-3 w-3 text-blue-600" /> Contact Details
-                  </h4>
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-5 flex items-center gap-2"><User className="h-3 w-3 text-blue-600" /> Contact Details</h4>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between pb-3 border-b border-gray-50 last:border-0 last:pb-0">
                       <span className="text-sm text-gray-500 flex items-center gap-2.5"><Phone className="h-4 w-4"/> Phone</span>
-                      {isEditing ? (
-                        <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className={`${editInputClass} w-48`}/>
-                      ) : (
-                        <span className="text-sm font-semibold text-gray-900">{client.phone}</span>
-                      )}
+                      {isEditing ? <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className={`${editInputClass} w-48`}/> : <span className="text-sm font-semibold text-gray-900">{client.phone}</span>}
                     </div>
                     <div className="flex items-center justify-between pb-3 border-b border-gray-50 last:border-0 last:pb-0">
                       <span className="text-sm text-gray-500 flex items-center gap-2.5"><Mail className="h-4 w-4"/> Email</span>
-                      {isEditing ? (
-                        <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className={`${editInputClass} w-48`}/>
-                      ) : (
-                        <span className="text-sm font-semibold text-gray-900">{client.email}</span>
-                      )}
+                      {isEditing ? <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className={`${editInputClass} w-48`}/> : <span className="text-sm font-semibold text-gray-900">{client.email}</span>}
                     </div>
                     {client.company && !isEditing && (
                       <div className="flex items-center justify-between">
@@ -209,11 +174,8 @@ export default function ClientDetailsModal({ client, onClose }: ClientDetailsMod
                   </div>
                 </div>
 
-                {/* Timeline */}
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-6 flex items-center gap-2">
-                    <Calendar className="h-3 w-3 text-blue-600" /> Activity History
-                  </h4>
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-6 flex items-center gap-2"><Calendar className="h-3 w-3 text-blue-600" /> Activity History</h4>
                   <div className="space-y-6 relative pl-2">
                     <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-gray-100"></div>
                     <div className="relative flex items-start gap-4">
@@ -228,35 +190,34 @@ export default function ClientDetailsModal({ client, onClose }: ClientDetailsMod
                 </div>
               </div>
 
+              {/* Right Column */}
               <div className="space-y-6">
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm h-full flex flex-col">
-                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-5 flex items-center gap-2">
-                    <MapPin className="h-3 w-3 text-blue-600" /> Property Portfolio
-                  </h4>
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-5 flex items-center gap-2"><MapPin className="h-3 w-3 text-blue-600" /> Property Portfolio</h4>
                   <div className="flex-1">
                     {isEditing ? (
-                      <div className="space-y-2">
-                        <label className="text-[10px] text-gray-400 font-bold uppercase block">Tags (comma separated)</label>
-                        <input type="text" value={formData.tags} onChange={(e) => setFormData({...formData, tags: e.target.value})} className={editInputClass} placeholder="Investor, VIP, etc."/>
-                      </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] text-gray-400 font-bold uppercase block">Tags (comma separated)</label>
+                            <input type="text" value={formData.tags} onChange={(e) => setFormData({...formData, tags: e.target.value})} className={editInputClass} placeholder="Investor, VIP..." />
+                        </div>
                     ) : (
-                      <>
-                        {client.propertiesOwned.length > 0 ? (
-                          <div className="space-y-3">
-                            {client.propertiesOwned.map((prop, i) => (
-                              <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-blue-200 transition-colors">
-                                <div className="bg-white p-2 rounded-md shadow-sm text-blue-600"><Building2 className="h-4 w-4" /></div>
-                                <span className="text-sm font-semibold text-gray-900 line-clamp-1">{prop}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="h-full flex flex-col items-center justify-center text-center p-4">
-                            <div className="p-3 bg-gray-50 rounded-full mb-3"><Building2 className="h-6 w-6 text-gray-300" /></div>
-                            <p className="text-sm text-gray-500">No properties linked yet.</p>
-                          </div>
-                        )}
-                      </>
+                        <>
+                            {client.propertiesOwned.length > 0 ? (
+                            <div className="space-y-3">
+                                {client.propertiesOwned.map((prop, i) => (
+                                <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-blue-200 transition-colors">
+                                    <div className="bg-white p-2 rounded-md shadow-sm text-blue-600"><Building2 className="h-4 w-4" /></div>
+                                    <span className="text-sm font-semibold text-gray-900 line-clamp-1">{prop}</span>
+                                </div>
+                                ))}
+                            </div>
+                            ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                                <div className="p-3 bg-gray-50 rounded-full mb-3"><Building2 className="h-6 w-6 text-gray-300" /></div>
+                                <p className="text-sm text-gray-500">No properties linked yet.</p>
+                            </div>
+                            )}
+                        </>
                     )}
                   </div>
 
@@ -278,14 +239,14 @@ export default function ClientDetailsModal({ client, onClose }: ClientDetailsMod
             <div className={`rounded-xl p-5 border ${isEditing ? 'bg-white border-blue-200 ring-2 ring-blue-500/10' : 'bg-yellow-50/50 border-yellow-100'}`}>
               <h4 className="text-xs font-bold text-yellow-700 uppercase tracking-wider mb-2">Notes</h4>
               {isEditing ? (
-                <textarea rows={3} value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} className="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-700 p-0 resize-none leading-relaxed" placeholder="Client notes..."/>
+                <textarea rows={3} value={formData.notes || ""} onChange={(e) => setFormData({...formData, notes: e.target.value})} className="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-700 p-0 resize-none leading-relaxed" placeholder="Client notes..."/>
               ) : (
                 <p className="text-sm text-gray-700 italic leading-relaxed">&quot;{client.notes}&quot;</p>
               )}
             </div>
           </div>
 
-          {/* Footer - Only visible during editing */}
+          {/* Footer - Visible ONLY in Edit Mode */}
           {isEditing && (
             <div className="px-8 py-5 bg-white border-t border-gray-100 flex justify-end gap-3 rounded-b-2xl">
                 <button 

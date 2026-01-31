@@ -62,6 +62,7 @@ export async function addClient(rawClientData: AddClientInput) {
       ? clientData.tags.split(',').map(t => t.trim()).filter(Boolean) 
       : [];
 
+    // Note: In real app, calculate actual value from DB
     const dbData = {
       organization_id: profile.organization_id,
       name: clientData.name,
